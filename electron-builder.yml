@@ -1,5 +1,5 @@
-appId: com.koala-clash
-productName: Koala Clash
+appId: io.github.mozibeat.r00tvpn
+productName: r00tvpn
 directories:
   buildResources: build
 # electron-builder adds package.json and production node_modules on its own
@@ -17,11 +17,11 @@ extraResources:
   - from: './extra/'
     to: ''
 protocols:
-  name: 'Koala Clash URI Scheme'
+  name: 'r00tvpn URI Scheme'
   schemes:
     - 'clash'
     - 'mihomo'
-    - 'koala-clash'
+    - 'r00tvpn'
 win:
   target:
     - nsis
@@ -34,7 +34,6 @@ nsis:
   oneClick: false
   perMachine: true
   createDesktopShortcut: true
-  include: build/nsis/installer.nsh
 mac:
   target:
     - pkg
@@ -57,13 +56,14 @@ pkg:
 linux:
   desktop:
     entry:
-      Name: Koala Clash
-      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/koala-clash'
+      Name: r00tvpn
+      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/r00tvpn'
   target:
     - deb
     - rpm
     - pacman
-  maintainer: coolcoala
+  maintainer: Mozibeat <56507352+Mozibeat@users.noreply.github.com>
+  executableName: r00tvpn
   category: Utility
   artifactName: ${productName}_${arch}.${ext}
 deb:

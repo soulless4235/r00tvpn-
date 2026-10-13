@@ -14,6 +14,10 @@ import {
 } from '../utils/dirs'
 import { copyFileSync, writeFileSync } from 'fs'
 import { t } from '../utils/i18n'
+import { APP_NAME, APP_SLUG } from '../../shared/brand'
+
+export const ELEVATE_TASK_NAME = `${APP_SLUG}-run`
+export const RUNNER_EXE = `${APP_SLUG}-run.exe`
 
 export function getFilePath(ext: string[]): string[] | undefined {
   return dialog.showOpenDialogSync({
@@ -39,9 +43,9 @@ export async function openUWPTool(): Promise<void> {
 
 export async function setupFirewall(): Promise<void> {
   const execPromise = promisify(exec)
-  const appName = app.getName()
+  // Rule names carry the app prefix so other Mihomo GUIs' rules are left alone
   const removeCommand = `
-  $rules = @("mihomo", "mihomo-alpha", "${appName}", "Sparkle", "Mihomo Party")
+  $rules = @("${APP_NAME} mihomo", "${APP_NAME} mihomo-alpha", "${APP_NAME}")
   foreach ($rule in $rules) {
     if (Get-NetFirewallRule -DisplayName $rule -ErrorAction SilentlyContinue) {
       Remove-NetFirewallRule -DisplayName $rule -ErrorAction SilentlyContinue
@@ -49,9 +53,9 @@ export async function setupFirewall(): Promise<void> {
   }
   `
   const createCommand = `
-  New-NetFirewallRule -DisplayName "mihomo" -Direction Inbound -Action Allow -Program "${mihomoCorePath('mihomo')}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
-  New-NetFirewallRule -DisplayName "mihomo-alpha" -Direction Inbound -Action Allow -Program "${mihomoCorePath('mihomo-alpha')}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
-  New-NetFirewallRule -DisplayName "${appName}" -Direction Inbound -Action Allow -Program "${exePath()}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
+  New-NetFirewallRule -DisplayName "${APP_NAME} mihomo" -Direction Inbound -Action Allow -Program "${mihomoCorePath('mihomo')}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
+  New-NetFirewallRule -DisplayName "${APP_NAME} mihomo-alpha" -Direction Inbound -Action Allow -Program "${mihomoCorePath('mihomo-alpha')}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
+  New-NetFirewallRule -DisplayName "${APP_NAME}" -Direction Inbound -Action Allow -Program "${exePath()}" -Enabled True -Profile Any -ErrorAction SilentlyContinue
   `
 
   if (process.platform === 'win32') {
@@ -94,7 +98,7 @@ const elevateTaskXml = `<?xml version="1.0" encoding="UTF-16"?>
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>"${path.join(taskDir(), `koala-clash-run.exe`)}"</Command>
+      <Command>"${path.join(taskDir(), RUNNER_EXE)}"</Command>
       <Arguments>"${exePath()}"</Arguments>
     </Exec>
   </Actions>
@@ -102,20 +106,20 @@ const elevateTaskXml = `<?xml version="1.0" encoding="UTF-16"?>
 `
 
 export function createElevateTaskSync(): void {
-  const taskFilePath = path.join(taskDir(), `koala-clash-run.xml`)
+  const taskFilePath = path.join(taskDir(), `${ELEVATE_TASK_NAME}.xml`)
   writeFileSync(taskFilePath, Buffer.from(`\ufeff${elevateTaskXml}`, 'utf-16le'))
   copyFileSync(
-    path.join(resourcesFilesDir(), 'koala-clash-run.exe'),
-    path.join(taskDir(), 'koala-clash-run.exe')
+    path.join(resourcesFilesDir(), RUNNER_EXE),
+    path.join(taskDir(), RUNNER_EXE)
   )
   execSync(
-    `%SystemRoot%\\System32\\schtasks.exe /create /tn "koala-clash-run" /xml "${taskFilePath}" /f`
+    `%SystemRoot%\\System32\\schtasks.exe /create /tn "${ELEVATE_TASK_NAME}" /xml "${taskFilePath}" /f`
   )
 }
 
 export async function deleteElevateTask(): Promise<void> {
   try {
-    execSync(`%SystemRoot%\\System32\\schtasks.exe /delete /tn "koala-clash-run" /f`)
+    execSync(`%SystemRoot%\\System32\\schtasks.exe /delete /tn "${ELEVATE_TASK_NAME}" /f`)
   } catch {
     // ignore
   }
@@ -123,7 +127,7 @@ export async function deleteElevateTask(): Promise<void> {
 
 export async function checkElevateTask(): Promise<boolean> {
   try {
-    execSync(`%SystemRoot%\\System32\\schtasks.exe /query /tn "koala-clash-run"`, { stdio: 'pipe' })
+    execSync(`%SystemRoot%\\System32\\schtasks.exe /query /tn "${ELEVATE_TASK_NAME}"`, { stdio: 'pipe' })
     return true
   } catch {
     return false

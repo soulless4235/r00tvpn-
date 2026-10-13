@@ -1,5 +1,6 @@
 export default {
   common: {
+    noResults: 'Ничего не найдено',
     save: 'Сохранить',
     cancel: 'Отмена',
     confirm: 'Подтвердить',
@@ -168,6 +169,7 @@ export default {
       subscriptionExpiring_one: 'Подписка закончится через {{count}} день',
       subscriptionExpiring_few: 'Подписка закончится через {{count}} дня',
       subscriptionExpiring_many: 'Подписка закончится через {{count}} дней',
+      subscriptionExpiring_other: 'Подписка закончится через {{count}} дня',
       subscriptionExpiringToday: 'Подписка закончится сегодня',
       subscriptionExpired: 'Подписка закончилась',
       subscriptionExpiringHint: 'Продлите до {{date}}, чтобы не потерять доступ',
@@ -257,6 +259,7 @@ export default {
       newLogs_one: '{{count}} новая запись',
       newLogs_few: '{{count}} новые записи',
       newLogs_many: '{{count}} новых записей',
+      newLogs_other: '{{count}} новой записи',
       emptyTitle: 'Логов пока нет',
       emptyDescription: 'Сообщения ядра появятся здесь',
       emptyFilterTitle: 'Ничего не найдено',
@@ -422,7 +425,8 @@ export default {
 
   errorBoundary: {
     title: 'Приложение упало :( Отправьте информацию ниже разработчикам',
-    copyErrorInfo: 'Копировать информацию об ошибке'
+    copyErrorInfo: 'Копировать информацию об ошибке',
+    errorStack: 'Стек вызовов'
   },
 
   coreError: {
@@ -441,7 +445,7 @@ export default {
     pleaseConfirm: 'Подтвердите действие',
     confirmDelete: 'Подтвердить удаление',
     confirmImportProfile: 'Импортировать конфигурацию подписки?',
-    confirmQuit: 'Вы уверены, что хотите выйти из Koala Clash?',
+    confirmQuit: 'Вы уверены, что хотите выйти из r00tvpn?',
     quitWarning: 'После выхода прокси перестанет работать',
     quickQuitHint: 'Нажмите дважды или удерживайте кнопку',
     canQuitDirectly: 'для быстрого выхода',
@@ -681,7 +685,7 @@ export default {
       registerTaskSchedule: 'Зарегистрировать задачу'
     },
     serviceModal: {
-      title: 'Управление службой Koala Clash',
+      title: 'Управление службой r00tvpn',
       serviceStatus: 'Состояние службы',
       connectionStatus: 'Состояние подключения',
       checking: 'Проверка',
@@ -994,7 +998,7 @@ export default {
       'Нажмите на иконку «Главная», чтобы вернуться на главную страницу.',
     supportTitle: 'Поддержка',
     supportDesc: 'Нажмите, чтобы связаться с поддержкой провайдера.',
-    welcome: 'Добро пожаловать в Koala Clash',
+    welcome: 'Добро пожаловать в r00tvpn',
     welcomeDesc:
       'Краткое руководство поможет быстро разобраться в приложении. Нажмите «Далее», чтобы начать.',
     navbar: 'Панель навигации',

@@ -1,5 +1,15 @@
 ## 1.5.0
 
+### r00tvpn
+
+- Первый выпуск r00tvpn — форка Koala Clash 1.5.0 под собственным брендом
+- Русский язык интерфейса по умолчанию
+- Обновления и ссылки ведут на репозиторий Mozibeat/r00tvpn-
+- Установщик больше не удаляет Koala Clash и не импортирует его профили
+- Правила брандмауэра Windows не затрагивают другие клиенты Mihomo
+
+### Koala Clash 1.5.0
+
 - alerts about kernel issues (configuration, antivirus, etc.)
 - updating the profile even when the HWID limit is reached
 - the look of the logs has been improved

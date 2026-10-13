@@ -3,7 +3,8 @@ import AdmZip from 'adm-zip'
 import path from 'path'
 import zlib from 'zlib'
 import { extract } from 'tar'
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
+import { createHash } from 'crypto'
 
 const cwd = process.cwd()
 const TEMP_DIR = path.join(cwd, 'node_modules/.temp')
@@ -149,7 +150,7 @@ async function resolveSidecar(binInfo) {
 
   fs.mkdirSync(sidecarDir, { recursive: true })
   if (fs.existsSync(sidecarPath)) {
-    fs.rmSync(sidecarPath)
+    fs.rmSync(sidecarPath, { force: true })
   }
   const tempDir = path.join(TEMP_DIR, name)
   const tempZip = path.join(tempDir, zipFile)
@@ -211,7 +212,7 @@ async function resolveSidecar(binInfo) {
     }
   } catch (err) {
     // 需要删除文件
-    fs.rmSync(sidecarPath)
+    fs.rmSync(sidecarPath, { force: true })
     throw err
   } finally {
     fs.rmSync(tempDir, { recursive: true })
@@ -222,7 +223,7 @@ async function resolveSidecar(binInfo) {
  * download the file to the extra dir
  */
 async function resolveResource(binInfo) {
-  const { file, downloadURL, needExecutable = false } = binInfo
+  const { file, downloadURL, sha256, needExecutable = false } = binInfo
 
   const resDir = path.join(cwd, 'extra', 'files')
   const targetPath = path.join(resDir, file)
@@ -233,6 +234,14 @@ async function resolveResource(binInfo) {
 
   fs.mkdirSync(resDir, { recursive: true })
   await downloadFile(downloadURL, targetPath)
+
+  if (sha256) {
+    const actual = createHash('sha256').update(fs.readFileSync(targetPath)).digest('hex')
+    if (actual !== sha256) {
+      fs.rmSync(targetPath)
+      throw new Error(`${file}: sha256 ${actual} does not match pinned ${sha256}`)
+    }
+  }
 
   if (needExecutable && platform !== 'win32') {
     execSync(`chmod 755 ${targetPath}`)
@@ -250,6 +259,10 @@ async function downloadFile(url, path) {
     method: 'GET',
     headers: { 'Content-Type': 'application/octet-stream' }
   })
+  // Without this a 404 page would be saved in place of the binary
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} for "${url}"`)
+  }
   const buffer = await response.arrayBuffer()
   fs.writeFileSync(path, new Uint8Array(buffer))
 
@@ -281,33 +294,83 @@ const resolveEnableLoopback = () =>
     file: 'enableLoopback.exe',
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
   })
+// The privileged service helper (GPL-3.0). Its "pre-release" tag is moved by
+// upstream, so each asset is pinned by hash: a silently replaced binary fails
+// the build instead of shipping. To update, take the new digests from
+// https://api.github.com/repos/UruhaLushia/sparkle-service/releases/tags/pre-release
+const SPARKLE_SERVICE_URL =
+  'https://github.com/UruhaLushia/sparkle-service/releases/download/pre-release'
+const SPARKLE_SERVICE_ASSETS = {
+  'win32-x64': [
+    'sparkle-service-windows-amd64-v1.exe',
+    'df7314bb79fdf4485a6adffe25b63eb7eebd5ddd3792ffcb2f6f31a616c9a9ac'
+  ],
+  'win32-ia32': [
+    'sparkle-service-windows-386.exe',
+    'e4b96942ef8698aafdb62ff56633b2ddb175b90b418e1108fb6b86db32c215b8'
+  ],
+  'win32-arm64': [
+    'sparkle-service-windows-arm64.exe',
+    '49b27aa8f7182965af22a8d2e0b8edcbec7e3a77d0889d6c35f5cd2cc8b9ecd0'
+  ],
+  'darwin-x64': [
+    'sparkle-service-darwin-amd64-v1',
+    'f9701f4d4a8048fd00661d8fca7637acd6ac0cc61a12dcab0a2652851486f449'
+  ],
+  'darwin-arm64': [
+    'sparkle-service-darwin-arm64',
+    '55263fa08ef9831d44a5e0b41dd2cb5b480e6b6bf9f678f87757b96f3144a5ee'
+  ],
+  'linux-x64': [
+    'sparkle-service-linux-amd64-v1',
+    'd87e8414f097a24b0b14f6d426ddb00a0646dd7f01bba9574659f6a0b529b691'
+  ],
+  'linux-arm64': [
+    'sparkle-service-linux-arm64',
+    'fc23208f8690d984ba8dfe9102665fd34ca5b372b855e4036072556cfdedc5c1'
+  ]
+}
 const resolveSparkleService = () => {
-  const map = {
-    'win32-x64': 'sparkle-service-windows-amd64-v1',
-    'win32-ia32': 'sparkle-service-windows-386',
-    'win32-arm64': 'sparkle-service-windows-arm64',
-    'darwin-x64': 'sparkle-service-darwin-amd64-v1',
-    'darwin-arm64': 'sparkle-service-darwin-arm64',
-    'linux-x64': 'sparkle-service-linux-amd64-v1',
-    'linux-arm64': 'sparkle-service-linux-arm64'
-  }
-  if (!map[`${platform}-${arch}`]) {
+  const asset = SPARKLE_SERVICE_ASSETS[`${platform}-${arch}`]
+  if (!asset) {
     throw new Error(`unsupported platform "${platform}-${arch}"`)
   }
-  const base = map[`${platform}-${arch}`]
-  const ext = platform === 'win32' ? '.exe' : ''
+  const [name, sha256] = asset
 
   return resolveResource({
-    file: `sparkle-service${ext}`,
-    downloadURL: `https://github.com/xishang0128/sparkle-service/releases/download/pre-release/${base}${ext}`,
+    file: `sparkle-service${platform === 'win32' ? '.exe' : ''}`,
+    downloadURL: `${SPARKLE_SERVICE_URL}/${name}`,
+    sha256,
     needExecutable: true
   })
 }
-const resolveRunner = () =>
-  resolveResource({
-    file: 'koala-clash-run.exe',
-    downloadURL: `https://github.com/coolcoala/koala-clash-run/releases/download/${arch}/koala-clash-run.exe`
-  })
+
+// Built from runner/ (needs Go); launched by the elevated scheduled task
+const resolveRunner = async () => {
+  const goArch = { x64: 'amd64', ia32: '386', arm64: 'arm64' }[arch]
+  if (!goArch) {
+    throw new Error(`unsupported arch "${arch}" for the runner`)
+  }
+  const target = path.join(cwd, 'extra', 'files', 'r00tvpn-run.exe')
+  fs.mkdirSync(path.dirname(target), { recursive: true })
+  try {
+    execFileSync(
+      'go',
+      ['build', '-trimpath', '-ldflags', '-s -w -H windowsgui', '-o', target, '.'],
+      {
+        cwd: path.join(cwd, 'runner'),
+        env: { ...process.env, GOOS: 'windows', GOARCH: goArch, CGO_ENABLED: '0' },
+        stdio: 'inherit'
+      }
+    )
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      throw new Error('Go is required to build runner/ (https://go.dev/dl/)')
+    }
+    throw err
+  }
+  console.log(`[INFO]: r00tvpn-run.exe built for ${goArch}`)
+}
 
 const resolve7zip = () =>
   resolveResource({
@@ -366,7 +429,7 @@ const tasks = [
   {
     name: 'runner',
     func: resolveRunner,
-    retry: 5,
+    retry: 1,
     winOnly: true
   },
   {

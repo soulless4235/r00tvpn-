@@ -120,6 +120,7 @@ import { closeFloatingWindow, showContextMenu, showFloatingWindow } from '../res
 import { getAppName } from './appName'
 import { getUserAgent } from './userAgent'
 import { setLanguage } from './i18n'
+import { APP_NAME } from '../../shared/brand'
 import { updateApplicationMenu } from '../resolve/menu'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -298,7 +299,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('applyTheme', (_e, theme) => ipcErrorWrapper(applyTheme)(theme))
   ipcMain.handle('copyEnv', (_e, type) => ipcErrorWrapper(copyEnv)(type))
   ipcMain.handle('alert', (_e, msg) => {
-    showError('Koala Clash', msg)
+    showError(APP_NAME, msg)
   })
   ipcMain.handle('resetAppConfig', resetAppConfig)
   ipcMain.handle('relaunchApp', () => {

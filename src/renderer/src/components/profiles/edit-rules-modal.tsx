@@ -925,7 +925,7 @@ const RuleListItemBase: React.FC<RuleListItemProps> = ({
           <Command>
             <CommandInput placeholder={t('profile.editRules.proxyPlaceholder')} />
             <CommandList>
-              <CommandEmpty>No results</CommandEmpty>
+              <CommandEmpty>{t('common.noResults')}</CommandEmpty>
               <CommandGroup>
                 {proxyGroups.map((group) => (
                   <CommandItem
@@ -1913,7 +1913,7 @@ const EditRulesModal: React.FC<Props> = (props) => {
                       <Command>
                         <CommandInput placeholder={t('profile.editRules.proxyPlaceholder')} />
                         <CommandList>
-                          <CommandEmpty>No results</CommandEmpty>
+                          <CommandEmpty>{t('common.noResults')}</CommandEmpty>
                           <CommandGroup>
                             {proxyGroups.map((group) => (
                               <CommandItem

@@ -25,8 +25,8 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
 
       <p className="my-2">{err.message}</p>
 
-      <details title="Error Stack">
-        <summary>Error Stack</summary>
+      <details title={t('errorBoundary.errorStack')}>
+        <summary>{t('errorBoundary.errorStack')}</summary>
         <pre>{err.stack}</pre>
       </details>
     </div>

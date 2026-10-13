@@ -15,6 +15,7 @@ import React, { useRef, useState } from 'react'
 import { downloadAndInstallUpdate } from '@renderer/utils/ipc'
 import { useTranslation } from 'react-i18next'
 import { Download, X } from 'lucide-react'
+import { REPO_URL } from '../../../../shared/brand'
 
 interface Props {
   version: string
@@ -80,7 +81,7 @@ const UpdaterModal: React.FC<Props> = (props) => {
               variant="outline"
               className="app-nodrag"
               onClick={() => {
-                open(`https://github.com/coolcoala/koala-clash/releases/tag/${version}`)
+                open(`${REPO_URL}/releases/tag/${version}`)
               }}
             >
               {t('updater.goToDownload')}

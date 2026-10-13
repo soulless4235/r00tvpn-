@@ -48,7 +48,7 @@ const zhCN: LocaleTranslations = {
   },
   menu: {
     about: '关于',
-    aboutApp: '关于 Koala Clash',
+    aboutApp: '关于 r00tvpn',
     hide: '隐藏',
     hideOthers: '隐藏其他',
     showAll: '显示全部',
@@ -188,7 +188,7 @@ const enUS: LocaleTranslations = {
   },
   menu: {
     about: 'About',
-    aboutApp: 'About Koala Clash',
+    aboutApp: 'About r00tvpn',
     hide: 'Hide',
     hideOthers: 'Hide Others',
     showAll: 'Show All',
@@ -328,7 +328,7 @@ const ruRU: LocaleTranslations = {
   },
   menu: {
     about: 'О программе',
-    aboutApp: 'О Koala Clash',
+    aboutApp: 'О r00tvpn',
     hide: 'Скрыть',
     hideOthers: 'Скрыть остальные',
     showAll: 'Показать все',
@@ -449,7 +449,7 @@ export function setLanguage(lang: string): void {
 
 export function t(key: string): string {
   const [namespace, translationKey] = key.split('.')
-  const locale = locales[currentLanguage] || locales['zh-CN']
+  const locale = locales[currentLanguage] || locales['ru-RU']
   const ns = namespace as keyof LocaleTranslations
 
   if (locale[ns] && locale[ns][translationKey]) {

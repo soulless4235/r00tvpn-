@@ -12,12 +12,16 @@ import { createHash } from 'crypto'
 import { setNotQuitDialog, mainWindow } from '..'
 import { disableSysProxy } from '../sys/sysproxy'
 import { t } from '../utils/i18n'
+import { APP_NAME, GITHUB_REPO, REPO_URL } from '../../shared/brand'
+
+// electron-builder names artifacts after productName; GitHub turns spaces into dots
+const ASSET_PREFIX = APP_NAME.replace(/ /g, '.')
 
 let downloadCancelToken: CancelTokenSource | null = null
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
-  const url = 'https://github.com/coolcoala/koala-clash/releases/latest/download/latest.yml'
+  const url = `${REPO_URL}/releases/latest/download/latest.yml`
   const res = await axios.get(url, {
     headers: { 'Content-Type': 'application/octet-stream' },
     ...(mixedPort != 0 && {
@@ -41,12 +45,12 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const releaseTag = version
-  const baseUrl = `https://github.com/coolcoala/koala-clash/releases/download/${releaseTag}/`
+  const baseUrl = `${REPO_URL}/releases/download/${releaseTag}/`
   const fileMap = {
-    'win32-x64': `Koala.Clash_x64-setup.exe`,
-    'win32-arm64': `Koala.Clash_arm64-setup.exe`,
-    'darwin-x64': `Koala.Clash_x64.pkg`,
-    'darwin-arm64': `Koala.Clash_arm64.pkg`
+    'win32-x64': `${ASSET_PREFIX}_x64-setup.exe`,
+    'win32-arm64': `${ASSET_PREFIX}_arm64-setup.exe`,
+    'darwin-x64': `${ASSET_PREFIX}_x64.pkg`,
+    'darwin-arm64': `${ASSET_PREFIX}_arm64.pkg`
   }
   let file = fileMap[`${process.platform}-${process.arch}`]
   if (isPortable()) {
@@ -57,7 +61,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
   }
   downloadCancelToken = axios.CancelToken.source()
 
-  const apiUrl = `https://api.github.com/repos/coolcoala/koala-clash/releases/tags/${releaseTag}`
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${releaseTag}`
   const apiRequestConfig: AxiosRequestConfig = {
     headers: { Accept: 'application/vnd.github.v3+json' },
     ...(mixedPort != 0 && {

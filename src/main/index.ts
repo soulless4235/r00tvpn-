@@ -13,7 +13,7 @@ import { init } from './utils/init'
 import path, { join } from 'path'
 import { initShortcut } from './resolve/shortcut'
 import { execSync, spawn } from 'child_process'
-import { createElevateTaskSync } from './sys/misc'
+import { createElevateTaskSync, ELEVATE_TASK_NAME, RUNNER_EXE } from './sys/misc'
 import { initProfileUpdater } from './core/profileUpdater'
 import { existsSync, writeFileSync } from 'fs'
 import { exePath, taskDir } from './utils/dirs'
@@ -21,6 +21,7 @@ import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { declineElevation, ELEVATION_DECLINED_ARG } from './utils/elevation'
 import { t } from './utils/i18n'
+import { APP_ID, DEEP_LINK_SCHEMES } from '../shared/brand'
 
 
 let quitTimeout: NodeJS.Timeout | null = null
@@ -100,10 +101,10 @@ if (
       } else {
         writeFileSync(path.join(taskDir(), 'param.txt'), 'empty')
       }
-      if (!existsSync(path.join(taskDir(), 'koala-clash-run.exe'))) {
-        throw new Error('koala-clash-run.exe not found')
+      if (!existsSync(path.join(taskDir(), RUNNER_EXE))) {
+        throw new Error(`${RUNNER_EXE} not found`)
       } else {
-        execSync('%SystemRoot%\\System32\\schtasks.exe /run /tn koala-clash-run')
+        execSync(`%SystemRoot%\\System32\\schtasks.exe /run /tn ${ELEVATE_TASK_NAME}`)
       }
       app.exit()
     } catch {
@@ -153,11 +154,12 @@ if (syncConfig.disableGPU) {
   app.disableHardwareAcceleration()
 }
 
+function isDeepLink(url: string): boolean {
+  return DEEP_LINK_SCHEMES.some((scheme) => url.startsWith(`${scheme}://`))
+}
+
 function getDeepLinkFromArgs(argv: string[]): string | undefined {
-  return argv.find(
-    (arg) =>
-      arg.startsWith('clash://') || arg.startsWith('mihomo://') || arg.startsWith('koala-clash://')
-  )
+  return argv.find(isDeepLink)
 }
 
 app.on('second-instance', async (_event, commandline) => {
@@ -289,7 +291,7 @@ powerMonitor.on('shutdown', async () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('koala-clash.app')
+  electronApp.setAppUserModelId(APP_ID)
   try {
     await initPromise
   } catch (e) {
@@ -379,12 +381,7 @@ app.whenReady().then(async () => {
 })
 
 async function handleDeepLink(url: string): Promise<void> {
-  if (
-    !url.startsWith('clash://') &&
-    !url.startsWith('mihomo://') &&
-    !url.startsWith('koala-clash://')
-  )
-    return
+  if (!isDeepLink(url)) return
 
   const urlObj = new URL(url)
   switch (urlObj.host) {

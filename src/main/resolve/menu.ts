@@ -4,6 +4,7 @@ import { getAppConfig } from '../config'
 import { quitWithoutCore } from '../core/manager'
 import { dataDir, logDir, mihomoCoreDir, mihomoWorkDir } from '../utils/dirs'
 import { t } from '../utils/i18n'
+import { APP_NAME, REPO_URL } from '../../shared/brand'
 
 export async function createApplicationMenu(): Promise<void> {
   if (process.platform !== 'darwin') {
@@ -15,15 +16,15 @@ export async function createApplicationMenu(): Promise<void> {
 
   const template: Electron.MenuItemConstructorOptions[] = [
     {
-      label: 'Koala Clash',
+      label: APP_NAME,
       submenu: [
         {
-          label: t('menu.about') + ' ' + 'Koala Clash',
+          label: t('menu.about') + ' ' + APP_NAME,
           role: 'about'
         },
         { type: 'separator' },
         {
-          label: t('menu.hide') + ' ' + 'Koala Clash',
+          label: t('menu.hide') + ' ' + APP_NAME,
           accelerator: 'Command+H',
           role: 'hide'
         },
@@ -172,13 +173,13 @@ export async function createApplicationMenu(): Promise<void> {
         {
           label: t('menu.learnMore'),
           click: () => {
-            shell.openExternal('https://github.com/coolcoala/koala-clash')
+            shell.openExternal(REPO_URL)
           }
         },
         {
           label: t('menu.reportIssue'),
           click: () => {
-            shell.openExternal('https://github.com/coolcoala/koala-clash/issues')
+            shell.openExternal(`${REPO_URL}/issues`)
           }
         },
         { type: 'separator' },
@@ -188,7 +189,7 @@ export async function createApplicationMenu(): Promise<void> {
             dialog.showMessageBox(mainWindow!, {
               type: 'info',
               title: t('menu.aboutApp'),
-              message: 'Koala Clash',
+              message: APP_NAME,
               detail: `${t('menu.version')}：${app.getVersion()}\n${t('menu.electronProxyTool')}`,
               buttons: [t('menu.ok')]
             })

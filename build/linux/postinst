@@ -1,14 +1,6 @@
 #!/bin/bash
 
-APP_NAME="Koala.Clash"
-
-# Clean up old "sparkle" installation
-if [ -L '/usr/bin/sparkle' ]; then
-    if type update-alternatives 2>/dev/null >&1; then
-        update-alternatives --remove 'sparkle' '/opt/sparkle/sparkle' 2>/dev/null || true
-    fi
-    rm -f '/usr/bin/sparkle'
-fi
+APP_NAME="r00tvpn"
 
 if type update-alternatives 2>/dev/null >&1; then
     # Remove previous link if it doesn't use update-alternatives

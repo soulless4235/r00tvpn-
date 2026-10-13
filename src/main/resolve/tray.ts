@@ -39,6 +39,7 @@ import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 import { applyTheme } from './theme'
 import { t } from '../utils/i18n'
+import { APP_NAME } from '../../shared/brand'
 
 export let tray: Tray | null = null
 let customTrayWindow: BrowserWindow | null = null
@@ -377,7 +378,7 @@ export async function createTray(): Promise<void> {
   if (process.platform === 'win32') {
     tray = new Tray(icoIcon)
   }
-  tray?.setToolTip('Koala Clash')
+  tray?.setToolTip(APP_NAME)
   tray?.setIgnoreDoubleClickEvents(true)
   await updateTrayIcon()
   if (process.platform === 'darwin') {

@@ -38,8 +38,8 @@ import { startSSIDCheck } from '../sys/ssid'
 import { startNetworkDetection } from '../core/manager'
 import { PORT_KEYS } from '../core/factory'
 import { initKeyManager } from '../service/manager'
-import { migrateFromOldApp } from './migration'
 import { cleanupLogs } from './logs'
+import { DEEP_LINK_SCHEMES } from '../../shared/brand'
 
 async function initDirs(): Promise<void> {
   if (!existsSync(dataDir())) {
@@ -175,29 +175,20 @@ async function migration(): Promise<void> {
 }
 
 function initDeeplink(): void {
-  if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-      app.setAsDefaultProtocolClient('clash', process.execPath, [path.resolve(process.argv[1])])
-      app.setAsDefaultProtocolClient('mihomo', process.execPath, [path.resolve(process.argv[1])])
-      app.setAsDefaultProtocolClient('koala-clash', process.execPath, [
-        path.resolve(process.argv[1])
-      ])
+  for (const scheme of DEEP_LINK_SCHEMES) {
+    if (process.defaultApp) {
+      if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient(scheme, process.execPath, [path.resolve(process.argv[1])])
+      }
+    } else {
+      app.setAsDefaultProtocolClient(scheme)
     }
-  } else {
-    app.setAsDefaultProtocolClient('clash')
-    app.setAsDefaultProtocolClient('mihomo')
-    app.setAsDefaultProtocolClient('koala-clash')
   }
 }
 
 export async function init(): Promise<void> {
   await initDirs()
   await Promise.all([initConfig(), initFiles()])
-  try {
-    await migrateFromOldApp()
-  } catch {
-    // migration failure should not block app startup
-  }
   await migration()
 
   const [appConfig] = await Promise.all([

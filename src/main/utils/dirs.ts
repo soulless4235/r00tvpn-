@@ -5,6 +5,7 @@ import path from 'path'
 import { getAppConfigSync } from '../config/app'
 import { checkCorePermissionSync } from '../core/manager'
 import { t } from './i18n'
+import { APP_SLUG } from '../../shared/brand'
 
 export const homeDir = app.getPath('home')
 
@@ -58,13 +59,13 @@ export function themesDir(): string {
 
 export function mihomoIpcPath(): string {
   if (process.platform === 'win32') {
-    return '\\\\.\\pipe\\Koala-Clash\\mihomo'
+    return `\\\\.\\pipe\\${APP_SLUG}\\mihomo`
   }
   const { core = 'mihomo' } = getAppConfigSync()
   if (!checkCorePermissionSync(core)) {
-    return '/tmp/koala-clash-mihomo-api-noperm.sock'
+    return `/tmp/${APP_SLUG}-mihomo-api-noperm.sock`
   }
-  return '/tmp/koala-clash-mihomo-api.sock'
+  return `/tmp/${APP_SLUG}-mihomo-api.sock`
 }
 
 export function serviceIpcPath(): string {

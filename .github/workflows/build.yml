@@ -91,10 +91,6 @@ jobs:
 
           jq --arg version "$RELEASE_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Correct folder name on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sed -i "s/productName: Koala Clash/productName: Koala.Clash/" electron-builder.yml
 
       - name: Install Build Tools
         if: matrix.os == 'ubuntu-latest' && matrix.format == 'pacman'
@@ -154,7 +150,7 @@ jobs:
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
           path: |
-            dist/[Kk]oala?[Cc]lash*
+            dist/r00tvpn*
             !dist/*.plist
             !dist/*blockmap*
             latest.yml
@@ -252,18 +248,3 @@ jobs:
           files: |
             latest.yml
             bin/dist/*
-
-      - name: Telegram Alert
-        if: success()
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          GROUP_ID: ${{ secrets.TELEGRAM_TO_GROUP }}
-          CHANNEL_ID: ${{ secrets.TELEGRAM_TO_CHANNEL }}
-        run: pnpm telegram
-
-  aur:
-    needs: [release]
-    uses: ./.github/workflows/aur-publish.yml
-    with:
-      tag: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.ref_name }}
-    secrets: inherit

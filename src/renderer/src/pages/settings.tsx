@@ -10,6 +10,7 @@ import ProxySwitches from '@renderer/components/settings/proxy-switches'
 import { useTranslation } from 'react-i18next'
 import { Github } from 'lucide-react'
 import { useState } from 'react'
+import { REPO_URL } from '../../../shared/brand'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
@@ -26,7 +27,7 @@ const Settings: React.FC = () => {
             className="app-nodrag"
             title={t('pages.settings.githubRepo')}
             onClick={() => {
-              window.open('https://github.com/coolcoala/koala-clash')
+              window.open(REPO_URL)
             }}
           >
             <Github className="text-lg" />

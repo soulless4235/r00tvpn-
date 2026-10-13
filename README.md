@@ -1,101 +1,85 @@
-# Koala Clash
+# r00tvpn
+
 <p align="center">
-  <img src="./build/icon.png" alt="Clash" width="128" />
+  <img src="./build/icon.png" alt="r00tvpn" width="128" />
   <br>
   <br>
-  <a href="https://github.com/coolcoala/koala-clash/releases">
-    <img src="https://img.shields.io/github/release/coolcoala/koala-clash/all.svg">
+  <a href="https://github.com/Mozibeat/r00tvpn-/releases">
+    <img src="https://img.shields.io/github/release/Mozibeat/r00tvpn-/all.svg">
   </a>
 </p>
-<h3 align="center">GUI client for <a href="https://github.com/MetaCubeX/mihomo">Mihomo</a></h3>
+<h3 align="center">Десктопный клиент для <a href="https://github.com/MetaCubeX/mihomo">Mihomo</a></h3>
 
-## Features
+r00tvpn — форк [Koala Clash](https://github.com/coolcoala/koala-clash) под собственным брендом.
+Desktop GUI for the Mihomo core (Windows, macOS, Linux), forked from Koala Clash.
 
-- [x] Out-of-the-box Tun mode without service mode
-- [x] Multiple color themes
-- [x] Support for most Mihomo configuration options
-- [x] Built-in Mihomo cores (stable and alpha)
+## Возможности
 
-## Screenshots
-![Preview](./docs/preview.png)
+- Режим TUN «из коробки», без установки службы
+- Импорт подписок по ссылке и через deep-link (`clash://`, `mihomo://`, `r00tvpn://`)
+- Режимы Rule / Global / Direct, системный прокси, логи и соединения
+- Несколько цветовых тем
+- Встроенное ядро Mihomo (stable; alpha — по выбору)
+- Интерфейс на русском (по умолчанию), английском и китайском
 
-## Development
+## Загрузка
 
-### Requirements
+Установщики для Windows (`.exe`, portable `.7z`), macOS (`.dmg`, `.pkg`) и Linux (`.AppImage`, `.deb`)
+публикуются в [Releases](https://github.com/Mozibeat/r00tvpn-/releases).
 
-- **Node.js** >= 20.0.0
-- **pnpm** >= 9.0.0
+## Сборка
+
+### Требования
+
+- **Node.js** >= 20 и **pnpm** >= 9 (`corepack enable`)
+- **Go** >= 1.22 — только для Windows-сборок (собирает `runner/`)
 - **Git**
 
-### Tech Stack
-
-Koala Clash is built with Electron + React + TypeScript.
-
-**Frontend:** React 19, shadcn/UI, Tailwind CSS, Monaco Editor
-
-**Backend:** Electron, Mihomo Core, sysproxy-go
-
-### Quick Start
+### Быстрый старт
 
 ```bash
-git clone https://github.com/coolcoala/koala-clash.git
-cd koala-clash
+git clone https://github.com/Mozibeat/r00tvpn-.git
+cd r00tvpn-
 pnpm install
 pnpm dev
 ```
 
-If Electron fails to install:
+`pnpm install` запускает `scripts/prepare.mjs`, который скачивает ядро Mihomo, геобазы и
+служебные бинарники в `extra/`. Повторно: `pnpm prepare` (или `pnpm prepare --arm64`).
 
-```bash
-cd node_modules/electron && node install.js && cd ../..
-```
+### Команды
 
-### Project Structure
+| Команда | Описание |
+|---------|----------|
+| `pnpm dev` | Режим разработки (renderer перезагружается сам, main — после перезапуска) |
+| `pnpm lint` | ESLint (с `--fix`) |
+| `pnpm typecheck` | Проверка типов TypeScript |
+| `pnpm build:win` | Сборка для Windows |
+| `pnpm build:mac` | Сборка для macOS |
+| `pnpm build:linux` | Сборка для Linux |
+
+Формат и архитектуру можно указать флагами: `pnpm build:linux AppImage --x64`, `pnpm build:mac dmg --arm64`.
+
+Релизы собирает GitHub Actions (`.github/workflows/build.yml`).
+
+### Структура
 
 ```
 src/
-├── main/               # Electron main process
-│   ├── core/           # Mihomo core management
-│   ├── config/         # Configuration management
-│   ├── resolve/        # Tray, shortcuts, auto-updater, floating window
-│   ├── sys/            # System integration (sysproxy, autorun)
-│   └── utils/          # Utilities
-├── renderer/           # React frontend
-│   └── src/
-│       ├── components/ # React components
-│       ├── pages/      # Page components
-│       ├── hooks/      # Hooks and context providers
-│       └── utils/      # Frontend utilities
-├── preload/            # Preload scripts (IPC bridge)
-└── shared/types/       # Shared TypeScript types
+├── main/        # main-процесс Electron: ядро, конфиги, трей, системный прокси
+├── renderer/    # интерфейс на React
+├── preload/     # IPC-мост
+└── shared/      # общий код; brand.ts — название, App ID, схема deep-link, репозиторий
+runner/          # запуск с правами администратора через планировщик задач Windows (Go)
 ```
 
-### Commands
+Как заменить иконки и другие элементы бренда — см. [docs/BRANDING.md](docs/BRANDING.md).
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start dev server (renderer hot reloads, main requires restart) |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Run Prettier |
-| `pnpm typecheck` | TypeScript type checking |
-| `pnpm build:win` | Build for Windows |
-| `pnpm build:mac` | Build for macOS |
-| `pnpm build:linux` | Build for Linux |
+## Лицензия и авторство
 
-Architecture and format can be specified via flags:
+Распространяется под [GPL-3.0](LICENSE).
 
-```bash
-pnpm build:win nsis --x64
-pnpm build:mac pkg --arm64
-pnpm build:linux deb --x64
-```
-
-### Build Artifacts
-
-- **Windows**: `.exe` (NSIS installer), `.7z` (portable)
-- **macOS**: `.pkg`
-- **Linux**: `.deb`, `.rpm`, `.pkg.tar.xz` (pacman)
-
-## Credits
-
-Based on [Sparkle](https://github.com/xishang0128/sparkle) by [xishang0128](https://github.com/xishang0128).
+- [Koala Clash](https://github.com/coolcoala/koala-clash) — coolcoala, исходный проект этого форка
+- [Sparkle](https://github.com/xishang0128/sparkle) — xishang0128, на котором основан Koala Clash
+- [Mihomo](https://github.com/MetaCubeX/mihomo) — MetaCubeX, прокси-ядро
+- [sparkle-service](https://github.com/UruhaLushia/sparkle-service) — служба для привилегированного режима
