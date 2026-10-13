@@ -1,4 +1,4 @@
-appId: io.github.mozibeat.r00tvpn
+appId: io.github.soulless4235.r00tvpn
 productName: r00tvpn
 directories:
   buildResources: build
@@ -62,7 +62,7 @@ linux:
   target:
     - AppImage
     - deb
-  maintainer: Mozibeat <56507352+Mozibeat@users.noreply.github.com>
+  maintainer: soulless4235 <56507352+soulless4235@users.noreply.github.com>
   executableName: r00tvpn
   category: Utility
   artifactName: ${productName}_${arch}.${ext}

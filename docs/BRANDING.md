@@ -44,5 +44,5 @@
 | Заголовок окна ошибки runner                                | `runner/main.go` (`title`)                                      |
 | Имя пакета в скриптах установки                             | `build/linux/postinst`, `build/pkg-scripts/postinstall`         |
 
-`appId` (`io.github.mozibeat.r00tvpn`) меняйте **до первого публичного релиза**: на нём завязаны
+`appId` (`io.github.soulless4235.r00tvpn`) меняйте **до первого публичного релиза**: на нём завязаны
 группировка в панели задач Windows, Bundle ID в macOS и обновление уже установленных копий.

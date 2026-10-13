@@ -3,12 +3,12 @@
   "version": "1.5.0",
   "description": "r00tvpn — GUI client for Mihomo (fork of Koala Clash)",
   "main": "./out/main/index.js",
-  "author": "Mozibeat <56507352+Mozibeat@users.noreply.github.com>",
+  "author": "soulless4235 <56507352+soulless4235@users.noreply.github.com>",
   "license": "GPL-3.0-only",
-  "homepage": "https://github.com/Mozibeat/r00tvpn-",
+  "homepage": "https://github.com/soulless4235/r00tvpn-",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mozibeat/r00tvpn-.git"
+    "url": "https://github.com/soulless4235/r00tvpn-.git"
   },
   "scripts": {
     "format": "prettier --write .",

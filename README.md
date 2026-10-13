@@ -4,8 +4,8 @@
   <img src="./build/icon.png" alt="r00tvpn" width="128" />
   <br>
   <br>
-  <a href="https://github.com/Mozibeat/r00tvpn-/releases">
-    <img src="https://img.shields.io/github/release/Mozibeat/r00tvpn-/all.svg">
+  <a href="https://github.com/soulless4235/r00tvpn-/releases">
+    <img src="https://img.shields.io/github/release/soulless4235/r00tvpn-/all.svg">
   </a>
 </p>
 <h3 align="center">Десктопный клиент для <a href="https://github.com/MetaCubeX/mihomo">Mihomo</a></h3>
@@ -25,7 +25,7 @@ Desktop GUI for the Mihomo core (Windows, macOS, Linux), forked from Koala Clash
 ## Загрузка
 
 Установщики для Windows (`.exe`, portable `.7z`), macOS (`.dmg`, `.pkg`) и Linux (`.AppImage`, `.deb`)
-публикуются в [Releases](https://github.com/Mozibeat/r00tvpn-/releases).
+публикуются в [Releases](https://github.com/soulless4235/r00tvpn-/releases).
 
 ## Сборка
 
@@ -38,7 +38,7 @@ Desktop GUI for the Mihomo core (Windows, macOS, Linux), forked from Koala Clash
 ### Быстрый старт
 
 ```bash
-git clone https://github.com/Mozibeat/r00tvpn-.git
+git clone https://github.com/soulless4235/r00tvpn-.git
 cd r00tvpn-
 pnpm install
 pnpm dev
