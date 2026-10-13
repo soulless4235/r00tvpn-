@@ -24,6 +24,7 @@ export default {
     remote: 'Удаленный',
     local: 'Локальный',
     global: 'Глобальный',
+    direct: 'Прямой',
     unnamed: 'Без имени',
     pinWindow: 'Закрепить окно',
     formatError: 'Ошибка формата',

@@ -5,7 +5,7 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useGroups } from '@renderer/hooks/use-groups'
 import { mihomoCloseAllConnections, patchMihomoConfig } from '@renderer/utils/ipc'
 import { cn } from '@renderer/lib/utils'
-import { Globe, Route } from 'lucide-react'
+import { ChevronsRight, Globe, Route } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -59,7 +59,8 @@ const OutboundModeSwitcher: React.FC = () => {
 
   const modes = [
     { value: 'rule' as const, icon: Route, label: t('sider.rules') },
-    { value: 'global' as const, icon: Globe, label: t('common.global') }
+    { value: 'global' as const, icon: Globe, label: t('common.global') },
+    { value: 'direct' as const, icon: ChevronsRight, label: t('common.direct') }
   ]
 
   return (

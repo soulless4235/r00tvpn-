@@ -149,6 +149,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     triggerTunShortcut = '',
     ruleModeShortcut = '',
     globalModeShortcut = '',
+    directModeShortcut = '',
     quitWithoutCoreShortcut = '',
     restartAppShortcut = ''
   } = await getAppConfig()
@@ -274,7 +275,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
       ? [
           {
             type: 'submenu' as const,
-            label: `${t('tray.outboundMode')} (${mode === 'rule' ? t('tray.rule') : t('tray.global')})`,
+            label: `${t('tray.outboundMode')} (${t(`tray.${mode}`)})`,
             submenu: [
               {
                 id: 'rule',
@@ -299,6 +300,20 @@ export const buildContextMenu = async (): Promise<Menu> => {
                 click: async (): Promise<void> => {
                   await patchControledMihomoConfig({ mode: 'global' })
                   await patchMihomoConfig({ mode: 'global' })
+                  mainWindow?.webContents.send('controledMihomoConfigUpdated')
+                  mainWindow?.webContents.send('groupsUpdated')
+                  ipcMain.emit('updateTrayMenu')
+                }
+              },
+              {
+                id: 'direct',
+                label: t('tray.directMode'),
+                accelerator: directModeShortcut,
+                type: 'radio' as const,
+                checked: mode === 'direct',
+                click: async (): Promise<void> => {
+                  await patchControledMihomoConfig({ mode: 'direct' })
+                  await patchMihomoConfig({ mode: 'direct' })
                   mainWindow?.webContents.send('controledMihomoConfigUpdated')
                   mainWindow?.webContents.send('groupsUpdated')
                   ipcMain.emit('updateTrayMenu')

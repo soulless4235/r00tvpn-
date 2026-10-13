@@ -24,6 +24,7 @@ export default {
     remote: '远程',
     local: '本地',
     global: '全局',
+    direct: '直连',
     unnamed: '未命名',
     pinWindow: '窗口置顶',
     formatError: '格式错误',

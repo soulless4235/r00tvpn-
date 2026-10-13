@@ -24,6 +24,7 @@ export default {
     remote: 'Remote',
     local: 'Local',
     global: 'Global',
+    direct: 'Direct',
     unnamed: 'Unnamed',
     pinWindow: 'Pin Window',
     formatError: 'Format error',

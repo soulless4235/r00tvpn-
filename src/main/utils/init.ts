@@ -1,8 +1,12 @@
 import {
   appConfigPath,
+  bundledCorePath,
   controledMihomoConfigPath,
   dataDir,
+  downloadedCoreDir,
+  isAppImage,
   logDir,
+  mihomoCorePath,
   mihomoTestDir,
   mihomoWorkDir,
   profileConfigPath,
@@ -19,7 +23,7 @@ import {
   defaultProfileConfig
 } from './template'
 import { stringifyYaml } from './yaml'
-import { mkdir, writeFile, cp, rm, readdir } from 'fs/promises'
+import { chmod, copyFile, mkdir, writeFile, cp, rm, readdir, readFile, stat } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { GEO_FILES, linkGeoFiles, removeUnusedMetadb } from './geo'
@@ -96,6 +100,30 @@ async function initFiles(): Promise<void> {
   await Promise.all(GEO_FILES.map(copy))
   await removeUnusedMetadb(mihomoWorkDir())
   await linkGeoFiles(mihomoTestDir())
+  await syncAppImageCores()
+}
+
+// Keep the data-dir copy of the cores in step with the ones inside the AppImage.
+// A refreshed copy loses setuid, so the app asks to grant the permission again.
+async function syncAppImageCores(): Promise<void> {
+  if (!isAppImage()) return
+  for (const core of ['mihomo', 'mihomo-alpha'] as const) {
+    const source = bundledCorePath(core)
+    if (!existsSync(source)) continue
+    const target = mihomoCorePath(core)
+    const stampPath = `${target}.source`
+    const { size, mtimeMs } = await stat(source)
+    const stamp = `${size}:${mtimeMs}`
+    if (existsSync(target) && existsSync(stampPath)) {
+      if ((await readFile(stampPath, 'utf8')) === stamp) continue
+    }
+    await mkdir(downloadedCoreDir(), { recursive: true })
+    // An older copy may be root-owned after a grant; unlinking it only needs write access to the dir
+    await rm(target, { force: true })
+    await copyFile(source, target)
+    await chmod(target, 0o755)
+    await writeFile(stampPath, stamp)
+  }
 }
 
 async function cleanup(): Promise<void> {

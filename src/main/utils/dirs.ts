@@ -84,13 +84,23 @@ export function downloadedCoreDir(): string {
   return path.join(dataDir(), 'sidecar')
 }
 
+// An AppImage runs from a read-only, nosuid FUSE mount that root cannot even
+// read, so neither setuid on the core nor the privileged service can work there
+export function isAppImage(): boolean {
+  return process.platform === 'linux' && !!process.env.APPIMAGE
+}
+
+export function bundledCorePath(core: 'mihomo' | 'mihomo-alpha'): string {
+  return path.join(mihomoCoreDir(), `${core}${process.platform === 'win32' ? '.exe' : ''}`)
+}
+
 export function mihomoCorePath(core: string): string {
   if (core === 'mihomo' || core === 'mihomo-alpha') {
-    const file = `${core}${process.platform === 'win32' ? '.exe' : ''}`
-    const bundledPath = path.join(mihomoCoreDir(), file)
-    // Builds ship the alpha core only on opt-in, otherwise the user downloads it
-    if (core === 'mihomo-alpha' && !existsSync(bundledPath)) {
-      return path.join(downloadedCoreDir(), file)
+    const bundledPath = bundledCorePath(core)
+    // Builds ship the alpha core only on opt-in, otherwise the user downloads it.
+    // AppImage runs a copy from the data dir (see syncAppImageCores) so it can get setuid.
+    if (isAppImage() || (core === 'mihomo-alpha' && !existsSync(bundledPath))) {
+      return path.join(downloadedCoreDir(), path.basename(bundledPath))
     }
     return bundledPath
   }
