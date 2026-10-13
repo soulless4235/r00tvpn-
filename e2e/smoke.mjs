@@ -436,4 +436,35 @@ try {
 
 const failed = results.filter((r) => !r.ok)
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`)
+if (process.env.GITHUB_ACTIONS) reportToGitHub()
 process.exit(failed.length ? 1 : 0)
+
+// Annotations and the job summary show on the run page without signing in,
+// unlike step logs
+function reportToGitHub() {
+  const esc = (s) => String(s).replace(/%/g, '%25').replace(/\r/g, '').replace(/\n/g, '%0A')
+  const label = path.basename(exe)
+  let appLog = ''
+  try {
+    appLog = fs
+      .readFileSync(path.join(ARTIFACTS, 'app.log'), 'utf8')
+      .split('\n')
+      .slice(-25)
+      .join('\n')
+  } catch {
+    // no output captured
+  }
+  for (const r of failed) {
+    const detail =
+      r.name === 'harness' && appLog ? `${r.error}\n--- app.log (tail) ---\n${appLog}` : r.error
+    console.log(`::error title=e2e ${label}: ${esc(r.name)}::${esc(detail)}`)
+  }
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const rows = results.map(
+      (r) =>
+        `| ${r.ok ? 'pass' : '**FAIL**'} | ${r.name} | ${r.ok ? '' : String(r.error).split('\n')[0].replace(/\|/g, '\\|')} |`
+    )
+    const summary = [`### e2e: ${label}`, '', '| | check | error |', '|---|---|---|', ...rows, '']
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary.join('\n') + '\n')
+  }
+}
