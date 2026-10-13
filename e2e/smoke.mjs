@@ -286,13 +286,19 @@ async function tunCheck() {
     return cfg.tun?.enable && cfg.tun.device
   }, 'tun enabled in core')
   await waitFor(() => tunUp(dev), `interface ${dev}`)
-  // No proxy configured for this request: only the TUN can hand it to node-b
-  const node = await whichNode(
-    () => directGet('http://1.1.1.1/'),
-    (dest) => dest === '1.1.1.1:80',
-    { mayFail: true }
-  )
-  assert(node === 'node-b', `request outside any proxy went via ${node}, expected node-b`)
+  // No proxy configured for this request: only the TUN can hand it to node-b.
+  // The interface shows up before auto-route installs its rules, so retry for a while.
+  let node = null
+  await waitFor(async () => {
+    node = await whichNode(
+      () => directGet('http://1.1.1.1/'),
+      (dest) => dest === '1.1.1.1:80',
+      { mayFail: true }
+    )
+    return node === 'node-b'
+  }, `request outside any proxy to reach node-b (last went via ${node})`).catch((e) => {
+    throw new Error(`${e.message}; last went via ${node}`)
+  })
   await power()
   await waitFor(() => !tunUp(dev), `interface ${dev} removed`)
 }
