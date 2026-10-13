@@ -12,3 +12,5 @@ out
 .zed
 *.tsbuildinfo
 latest.yml
+e2e-artifacts
+rawChangelog.md

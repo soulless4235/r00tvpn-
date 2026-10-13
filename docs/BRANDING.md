@@ -5,18 +5,18 @@
 
 ## Иконки
 
-| Файл | Формат и размеры | Где используется |
-|------|------------------|------------------|
-| `build/icon.png` | PNG 512×512 (лучше 1024×1024), RGBA | Иконка приложения в Linux (AppImage, deb), README |
-| `build/icon.ico` | ICO: 16, 24, 32, 48, 64, 256 | Иконка `.exe` в Windows |
-| `build/installerIcon.ico` | ICO: 16, 24, 32, 48, 64, 256 | Иконка установщика NSIS |
-| `build/icon.icns` | ICNS: 16…1024 (с @2x) | Иконка приложения в macOS (dmg, pkg) |
-| `resources/icon.png` | PNG 512×512 | Иконка окна; трей в Linux, когда ядро запущено |
-| `resources/icon_off.png` | PNG 512×512 | Трей в Linux, когда ядро остановлено |
-| `resources/icon.ico` | ICO: 16, 24, 32, 48, 64, 256 | Трей в Windows, ядро запущено |
-| `resources/icon_off.ico` | ICO: 16, 24, 32, 48, 64, 256 | Трей в Windows, ядро остановлено |
-| `resources/icon_on_mac.png` | PNG 80×80, **одноцветный глиф на прозрачном фоне** | Строка меню macOS, ядро запущено |
-| `resources/icon_off_mac.png` | PNG 80×80, одноцветный глиф | Строка меню macOS, ядро остановлено |
+| Файл                         | Формат и размеры                                   | Где используется                                  |
+| ---------------------------- | -------------------------------------------------- | ------------------------------------------------- |
+| `build/icon.png`             | PNG 512×512 (лучше 1024×1024), RGBA                | Иконка приложения в Linux (AppImage, deb), README |
+| `build/icon.ico`             | ICO: 16, 24, 32, 48, 64, 256                       | Иконка `.exe` в Windows                           |
+| `build/installerIcon.ico`    | ICO: 16, 24, 32, 48, 64, 256                       | Иконка установщика NSIS                           |
+| `build/icon.icns`            | ICNS: 16…1024 (с @2x)                              | Иконка приложения в macOS (dmg, pkg)              |
+| `resources/icon.png`         | PNG 512×512                                        | Иконка окна; трей в Linux, когда ядро запущено    |
+| `resources/icon_off.png`     | PNG 512×512                                        | Трей в Linux, когда ядро остановлено              |
+| `resources/icon.ico`         | ICO: 16, 24, 32, 48, 64, 256                       | Трей в Windows, ядро запущено                     |
+| `resources/icon_off.ico`     | ICO: 16, 24, 32, 48, 64, 256                       | Трей в Windows, ядро остановлено                  |
+| `resources/icon_on_mac.png`  | PNG 80×80, **одноцветный глиф на прозрачном фоне** | Строка меню macOS, ядро запущено                  |
+| `resources/icon_off_mac.png` | PNG 80×80, одноцветный глиф                        | Строка меню macOS, ядро остановлено               |
 
 Советы:
 
@@ -34,15 +34,15 @@
 
 ## Название и идентификаторы
 
-| Что | Где |
-|-----|-----|
-| Название, slug, App ID, схема deep-link, GitHub-репозиторий | `src/shared/brand.ts` |
-| `name`, `description`, `author`, `homepage`, `repository` | `package.json` |
-| `appId`, `productName`, схемы протоколов, `maintainer` | `electron-builder.yml` |
-| Строки «О r00tvpn», «Добро пожаловать в r00tvpn» и т. п. | `src/main/utils/i18n.ts`, `src/renderer/src/locales/*/index.ts` |
-| Заголовки HTML-окон | `src/renderer/*.html` |
-| Заголовок окна ошибки runner | `runner/main.go` (`title`) |
-| Имя пакета в скриптах установки | `build/linux/postinst`, `build/pkg-scripts/postinstall` |
+| Что                                                         | Где                                                             |
+| ----------------------------------------------------------- | --------------------------------------------------------------- |
+| Название, slug, App ID, схема deep-link, GitHub-репозиторий | `src/shared/brand.ts`                                           |
+| `name`, `description`, `author`, `homepage`, `repository`   | `package.json`                                                  |
+| `appId`, `productName`, схемы протоколов, `maintainer`      | `electron-builder.yml`                                          |
+| Строки «О r00tvpn», «Добро пожаловать в r00tvpn» и т. п.    | `src/main/utils/i18n.ts`, `src/renderer/src/locales/*/index.ts` |
+| Заголовки HTML-окон                                         | `src/renderer/*.html`                                           |
+| Заголовок окна ошибки runner                                | `runner/main.go` (`title`)                                      |
+| Имя пакета в скриптах установки                             | `build/linux/postinst`, `build/pkg-scripts/postinstall`         |
 
 `appId` (`io.github.mozibeat.r00tvpn`) меняйте **до первого публичного релиза**: на нём завязаны
 группировка в панели задач Windows, Bundle ID в macOS и обновление уже установленных копий.

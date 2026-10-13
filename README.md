@@ -49,18 +49,18 @@ pnpm dev
 
 ### Команды
 
-| Команда | Описание |
-|---------|----------|
-| `pnpm dev` | Режим разработки (renderer перезагружается сам, main — после перезапуска) |
-| `pnpm lint` | ESLint (с `--fix`) |
-| `pnpm typecheck` | Проверка типов TypeScript |
-| `pnpm build:win` | Сборка для Windows |
-| `pnpm build:mac` | Сборка для macOS |
-| `pnpm build:linux` | Сборка для Linux |
+| Команда            | Описание                                                                  |
+| ------------------ | ------------------------------------------------------------------------- |
+| `pnpm dev`         | Режим разработки (renderer перезагружается сам, main — после перезапуска) |
+| `pnpm lint`        | ESLint (с `--fix`)                                                        |
+| `pnpm typecheck`   | Проверка типов TypeScript                                                 |
+| `pnpm build:win`   | Сборка для Windows                                                        |
+| `pnpm build:mac`   | Сборка для macOS                                                          |
+| `pnpm build:linux` | Сборка для Linux                                                          |
 
 Формат и архитектуру можно указать флагами: `pnpm build:linux AppImage --x64`, `pnpm build:mac dmg --arm64`.
 
-Релизы собирает GitHub Actions (`.github/workflows/build.yml`).
+Релизы собирает GitHub Actions — см. [docs/RELEASING.md](docs/RELEASING.md).
 
 ### Структура
 
