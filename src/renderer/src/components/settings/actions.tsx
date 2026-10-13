@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { toast } from 'sonner'
 import { Button } from '@renderer/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'

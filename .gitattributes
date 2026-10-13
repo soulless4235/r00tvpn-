@@ -1,0 +1,8 @@
+# Keep LF everywhere (matches .editorconfig / Prettier) even on Windows
+# checkouts with core.autocrlf=true: CRLF breaks the deb/pkg shell scripts.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary
+*.ttf binary
