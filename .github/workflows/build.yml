@@ -166,9 +166,19 @@ jobs:
           chmod +x dist/r00tvpn_x86_64.AppImage
           echo "APP=$PWD/dist/r00tvpn_x86_64.AppImage" >> "$GITHUB_ENV"
           echo "FLAGS=--appimage" >> "$GITHUB_ENV"
+      # Plain Xvfb: xvfb-run failed its own cleanup and masked the test's exit code
+      - name: Start virtual display
+        run: |
+          Xvfb :99 -screen 0 1280x800x24 -nolisten tcp &
+          sleep 2
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
       # Separate dbus session: the system proxy test writes gsettings there, not to the runner
       - name: Smoke test (import, nodes, modes, system proxy, TUN, logs, connections)
-        run: dbus-run-session -- xvfb-run -a --server-args="-screen 0 1280x800x24" node e2e/smoke.mjs "$APP" --tun $FLAGS
+        run: dbus-run-session -- node e2e/smoke.mjs "$APP" --tun $FLAGS
+      # When the app never comes up Playwright only shows the Node inspector; get Electron's own log
+      - name: Diagnose launch failure
+        if: failure()
+        run: timeout 30 "$APP" --no-sandbox --remote-debugging-port=0 --enable-logging=stderr --v=1 2>&1 | tail -n 150 || true
       - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

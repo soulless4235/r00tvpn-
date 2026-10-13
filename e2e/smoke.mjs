@@ -234,8 +234,13 @@ async function go(hash) {
 
 const bodyText = () => page.locator('body').innerText()
 const power = () => page.locator('[data-guide="home-power-toggle"]').click()
-const gsettings = (key) =>
-  execFileSync('gsettings', ['get', 'org.gnome.system.proxy', ...key.split(' ')])
+// gsettings('mode') -> org.gnome.system.proxy mode; gsettings('host', 'http') -> org.gnome.system.proxy.http host
+const gsettings = (key, sub) =>
+  execFileSync('gsettings', [
+    'get',
+    sub ? `org.gnome.system.proxy.${sub}` : 'org.gnome.system.proxy',
+    key
+  ])
     .toString()
     .trim()
 const tunUp = (dev) => {
@@ -353,8 +358,9 @@ try {
     )
     if (isLinux) {
       await waitFor(() => gsettings('mode') === "'manual'", 'gsettings proxy mode manual')
-      assert(gsettings('http host') === "'127.0.0.1'", `http host ${gsettings('http host')}`)
-      assert(gsettings('http port') === String(PORTS.mixed), `http port ${gsettings('http port')}`)
+      const host = gsettings('host', 'http')
+      const port = gsettings('port', 'http')
+      assert(host === "'127.0.0.1'" && port === String(PORTS.mixed), `http proxy ${host}:${port}`)
     }
     const node = await whichNode(() => viaApp('/'))
     assert(node === 'node-a', `went via ${node}, expected the default node-a`)
