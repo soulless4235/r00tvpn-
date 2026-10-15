@@ -366,9 +366,14 @@ try {
     )
     if (isLinux) {
       await waitFor(() => gsettings('mode') === "'manual'", 'gsettings proxy mode manual')
-      const host = gsettings('host', 'http')
-      const port = gsettings('port', 'http')
-      assert(host === "'127.0.0.1'" && port === String(PORTS.mixed), `http proxy ${host}:${port}`)
+      // the helper sets the mode before the host and port: wait for those too
+      let proxy = ''
+      await waitFor(() => {
+        proxy = `${gsettings('host', 'http')}:${gsettings('port', 'http')}`
+        return proxy === `'127.0.0.1':${PORTS.mixed}`
+      }, 'gsettings http proxy 127.0.0.1').catch(() => {
+        throw new Error(`http proxy ${proxy}`)
+      })
     }
     const node = await whichNode(() => viaApp('/'))
     assert(node === 'node-a', `went via ${node}, expected the default node-a`)
