@@ -565,7 +565,7 @@ const Home: React.FC = () => {
 
           {firstGroup && (
             <div className="flex h-full min-h-80 min-w-0 flex-[1_1_340px] flex-col">
-              <ServerList group={firstGroup} />
+              <ServerList group={firstGroup} connected={showConnectedTimer} />
             </div>
           )}
         </div>

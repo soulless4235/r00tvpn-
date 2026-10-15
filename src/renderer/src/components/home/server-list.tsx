@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, Gauge } from 'lucide-react'
@@ -38,8 +38,14 @@ interface Section {
   items: Member[]
 }
 
+// Routes need a moment after connecting before a delay test reflects them
+const AUTO_TEST_DELAY_MS = 1500
+
 // The home screen's server picker: the main group's members, nodes grouped by country flag
-const ServerList: React.FC<{ group: ControllerMixedGroup }> = ({ group }) => {
+const ServerList: React.FC<{ group: ControllerMixedGroup; connected: boolean }> = ({
+  group,
+  connected
+}) => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { mutate } = useGroups()
@@ -105,6 +111,20 @@ const ServerList: React.FC<{ group: ControllerMixedGroup }> = ({ group }) => {
       setTesting(false)
     }
   }
+
+  // Once a connection comes up the servers are tested on their own, as the button would
+  const testLatencyRef = useRef(testLatency)
+  useEffect(() => {
+    testLatencyRef.current = testLatency
+  })
+  const wasConnected = useRef(connected)
+  useEffect(() => {
+    const justConnected = connected && !wasConnected.current
+    wasConnected.current = connected
+    if (!justConnected) return
+    const timer = setTimeout(() => void testLatencyRef.current(), AUTO_TEST_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [connected])
 
   const delayText = (delay: number | undefined): string =>
     delay === undefined

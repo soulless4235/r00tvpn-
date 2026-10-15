@@ -374,6 +374,15 @@ try {
     assert(node === 'node-a', `went via ${node}, expected the default node-a`)
   })
 
+  await check('latency tested on its own after connecting', async () => {
+    // a node shows "—" until a delay test has run; nobody taps the button here
+    const nodeA = page.getByRole('button', { name: /^node-a\b/ })
+    await waitFor(
+      async () => !(await nodeA.innerText()).trim().endsWith('—'),
+      'node-a latency after connecting'
+    )
+  })
+
   await check('select node in the UI', async () => {
     // the home screen lists the main group's nodes next to the connect button
     await go('#/home')
