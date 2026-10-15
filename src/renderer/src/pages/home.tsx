@@ -7,23 +7,26 @@ import { useGroups } from '@renderer/hooks/use-groups'
 import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import { useTranslation } from 'react-i18next'
 import { memo, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import Power from '@renderer/assets/on_icon.svg'
-import Pause from '@renderer/assets/pause_icon.svg'
-import Alert from '@renderer/assets/alert_icon.svg'
 import {
   InfinityIcon,
   WifiOff,
   PlusCircle,
-  ChevronRight,
   Globe,
   ArrowUp,
   ArrowDown,
   RefreshCcw,
   CalendarClock,
-  CreditCard
+  CreditCard,
+  Power,
+  TriangleAlert,
+  Route,
+  ChevronsRight
 } from 'lucide-react'
+import ServerList from '@renderer/components/home/server-list'
+import TrafficSparkline from '@renderer/components/home/traffic-sparkline'
+import { useOutboundMode } from '@renderer/hooks/use-outbound-mode'
+import { cn } from '@renderer/lib/utils'
 import { SiTelegram } from 'react-icons/si'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
@@ -96,7 +99,7 @@ const Home: React.FC = () => {
 
   const { profileConfig, addProfileItem } = useProfileConfig()
   const { groups } = useGroups()
-  const navigate = useNavigate()
+  const { mode: outboundMode, setMode: setOutboundMode } = useOutboundMode()
   const hasProfiles = (profileConfig?.items?.length ?? 0) > 0
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
@@ -209,6 +212,21 @@ const Home: React.FC = () => {
       : t('pages.home.subscriptionExpiring', { count: daysRemaining })
 
   const firstGroup = groups?.[0]
+  // "Авто · 🇫🇮 VLESS Vision" when the selection is itself a group
+  const viaLabel = useMemo(() => {
+    if (!firstGroup?.now) return null
+    const selected = firstGroup.all.find((m) => m.name === firstGroup.now)
+    return selected && 'now' in selected && selected.now
+      ? `${firstGroup.now} · ${selected.now}`
+      : firstGroup.now
+  }, [firstGroup])
+  // A provider can lock the routing mode for its profile, as in the sidebar
+  const globalModeAllowed = currentProfile?.globalMode !== false
+  const modeOptions = [
+    { value: 'rule' as const, icon: Route, label: t('sider.rules') },
+    { value: 'global' as const, icon: Globe, label: t('common.global') },
+    { value: 'direct' as const, icon: ChevronsRight, label: t('common.direct') }
+  ]
   const supportUrl = currentProfile?.supportUrl
   const supportLinkInfo = useMemo(() => {
     if (!supportUrl) return null
@@ -282,7 +300,7 @@ const Home: React.FC = () => {
             <button
               onClick={handleAddProfile}
               data-guide="home-add-profile-btn"
-              className="flex items-center gap-2 rounded-xl border border-stroke bg-gradient-start-power-on/50 backdrop-blur-xl px-6 py-3 text-foreground hover:bg-gradient-start-power-on/40 transition-colors"
+              className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:brightness-105 cursor-pointer"
             >
               <PlusCircle className="size-5" />
               <span className="text-sm font-medium">{t('pages.profiles.addProfile')}</span>
@@ -305,219 +323,249 @@ const Home: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="flex flex-col h-full px-2 pb-2 gap-3">
-          {/* Profile card */}
-          {currentProfile && (
-            <div className="rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-4">
-              <div
-                data-guide="home-profile-header"
-                className="flex items-center justify-center gap-3"
-              >
-                {currentProfile.logo && (
-                  <img
-                    src={currentProfile.logo}
-                    alt=""
-                    className="w-10 h-10 rounded-full"
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).style.display = 'none'
-                    }}
-                  />
-                )}
-                <span className="font-medium text-base">{currentProfile.name}</span>
-                {currentProfile.type === 'remote' && (
-                  <button
-                    onClick={handleUpdateProfile}
-                    disabled={updating}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
+        <div className="flex h-full flex-wrap gap-3 overflow-y-auto px-2 pb-2">
+          {/* Connection card */}
+          <section
+            aria-label={status}
+            className="flex h-full min-w-0 flex-[1_1_300px] flex-col gap-4 overflow-y-auto rounded-2xl border border-stroke bg-card p-5"
+          >
+            {currentProfile && (
+              <div className="flex flex-col gap-2">
+                <div data-guide="home-profile-header" className="flex items-center gap-2.5">
+                  {currentProfile.logo && (
+                    <img
+                      src={currentProfile.logo}
+                      alt=""
+                      className="size-8 rounded-full"
+                      onError={(e) => {
+                        ;(e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-base font-semibold">
+                    {currentProfile.name}
+                  </span>
+                  {currentProfile.type === 'remote' && (
+                    <button
+                      type="button"
+                      onClick={handleUpdateProfile}
+                      disabled={updating}
+                      aria-label={t('common.update')}
+                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50 cursor-pointer"
+                    >
+                      <RefreshCcw className={`size-4 ${updating ? 'animate-spin' : ''}`} />
+                    </button>
+                  )}
+                </div>
+                {currentProfile.announce && (
+                  <div
+                    data-guide="home-profile-announce"
+                    className="whitespace-pre-line text-sm text-muted-foreground"
                   >
-                    <RefreshCcw className={`size-4 ${updating ? 'animate-spin' : ''}`} />
-                  </button>
+                    {currentProfile.announce}
+                  </div>
                 )}
               </div>
-              {currentProfile.announce && (
-                <div
-                  data-guide="home-profile-announce"
-                  className="text-sm font-medium text-center mt-2 whitespace-pre-line"
-                >
-                  {currentProfile.announce}
-                </div>
-              )}
-            </div>
-          )}
-          {/* Subscription expiry notice — replaces the stats block near the end of the period */}
-          {subscription && showExpiryNotice ? (
-            <div
-              role="status"
-              className="rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-4"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="flex items-center justify-center gap-2.5">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
-                    <CalendarClock className="size-5" aria-hidden />
-                  </div>
-                  <p className="text-base font-semibold leading-snug text-destructive">
+            )}
+
+            {/* Subscription expiry notice replaces the stats near the end of the period */}
+            {subscription && showExpiryNotice ? (
+              <div
+                role="status"
+                className="rounded-xl border border-destructive/40 bg-destructive/10 p-3"
+              >
+                <div className="flex items-center gap-2.5">
+                  <CalendarClock className="size-5 shrink-0 text-destructive" aria-hidden />
+                  <p className="text-sm font-semibold leading-snug text-destructive">
                     {expiryTitle}
                   </p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground text-balance">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   {isExpired
                     ? t('pages.home.subscriptionExpiredHint')
                     : t('pages.home.subscriptionExpiringHint', { date: expireDate })}
                 </p>
+                {renewAction && (
+                  <button
+                    type="button"
+                    onClick={() => open(renewAction.url)}
+                    className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:brightness-105 active:scale-[0.99] cursor-pointer"
+                  >
+                    <CreditCard className="size-4 shrink-0" aria-hidden />
+                    <span className="truncate">{renewAction.label}</span>
+                  </button>
+                )}
               </div>
-              {renewAction && (
-                <button
-                  type="button"
-                  onClick={() => open(renewAction.url)}
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-stroke-power-on bg-gradient-start-power-on/50 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-gradient-start-power-on/40 active:scale-[0.99] cursor-pointer"
-                >
-                  <CreditCard className="size-4 shrink-0" aria-hidden />
-                  <span className="truncate">{renewAction.label}</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            subscription && (
-              <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center rounded-2xl border border-stroke bg-card/50 backdrop-blur-xl p-1">
-                <div className="flex flex-col items-center py-2 px-1">
-                  <span className="text-sm text-foreground">
-                    {t('pages.home.trafficRemaining')}
-                  </span>
-                  <span className="font-bold text-base mt-0.5">
-                    {trafficTotal > 0 ? formatBytes(trafficRemaining) : <InfinityIcon />}
-                  </span>
+            ) : (
+              subscription && (
+                <div className="grid grid-cols-3 gap-1 rounded-xl bg-secondary/60 p-2 text-center">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[11px] leading-tight text-muted-foreground">
+                      {t('pages.home.trafficRemaining').replace(/:$/, '')}
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {trafficTotal > 0 ? (
+                        formatBytes(trafficRemaining)
+                      ) : (
+                        <InfinityIcon className="size-4" />
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[11px] leading-tight text-muted-foreground">
+                      {t('pages.home.daysRemaining').replace(/:$/, '')}
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {expireTimestamp > 0 ? daysRemaining : <InfinityIcon className="size-4" />}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[11px] leading-tight text-muted-foreground">
+                      {t('pages.home.expires').replace(/:$/, '')}
+                    </span>
+                    <span className="text-sm font-semibold">{expireDate}</span>
+                  </div>
                 </div>
-                <div className="h-8 w-px bg-stroke" />
-                <div className="flex flex-col items-center py-2 px-1">
-                  <span className="text-sm text-foreground">{t('pages.home.daysRemaining')}</span>
-                  <span className="text-base font-bold mt-0.5">
-                    {expireTimestamp > 0 ? daysRemaining : <InfinityIcon />}
-                  </span>
-                </div>
-                <div className="h-8 w-px bg-stroke" />
-                <div className="flex flex-col items-center py-2 px-1">
-                  <span className="text-sm text-foreground">{t('pages.home.expires')}</span>
-                  <span className="text-base font-bold mt-0.5">{expireDate}</span>
-                </div>
-              </div>
-            )
-          )}
+              )
+            )}
 
-          {/* Connection button */}
-          <div className="flex flex-col grow-3 items-center justify-center min-h-0">
-            <div className="mb-3 flex h-6 items-center justify-center">
-              <CharacterMorph
-                texts={[status]}
-                reserveTexts={statusWidthTexts}
-                interval={3000}
-                className="h-6 leading-none text-foreground font-semibold uppercase"
-              />
-            </div>
-            <button
-              disabled={isDisabled}
-              onClick={() => (coreProblem ? reopenCoreError() : onValueChange(!isSelected))}
-              data-guide="home-power-toggle"
-              className="relative group transition-transform active:scale-95 cursor-pointer"
-            >
-              <div
-                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 bg-radial-[at_30%_45%] backdrop-blur-xl border-2 ${
-                  isSelected
-                    ? 'from-gradient-start-power-on/60 to-gradient-end-power-on/60 border-stroke-power-on'
-                    : 'from-gradient-start-power-off/50 to-gradient-end-power-off/50 border-stroke-power-off'
-                } ${loading ? 'animate-none' : ''}`}
-              >
-                <div className="relative size-16">
-                  <Spinner
-                    className={`absolute inset-0 m-auto size-16 text-[#FAFAFA] transition-all duration-300 ease-out ${
-                      loading ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-                    }`}
-                  />
-                  <img
-                    src={Pause}
-                    alt=""
-                    className={`absolute inset-0 size-16 fill-foreground transition-all duration-300 ease-out ${
-                      !loading && isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-                    }`}
-                  />
-                  <img
-                    src={Power}
-                    alt=""
-                    className={`absolute inset-0 size-16 fill-foreground transition-all duration-300 ease-out ${
-                      !loading && !isSelected && !coreProblem
-                        ? 'opacity-100 scale-100'
-                        : 'opacity-0 scale-90'
-                    }`}
-                  />
-                  <img
-                    src={Alert}
-                    alt=""
-                    className={`absolute inset-0 size-16 fill-foreground transition-all duration-300 ease-out ${
-                      !loading && coreProblem ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-                    }`}
-                  />
-                </div>
+            {/* Status and connection time */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <span
+                  aria-hidden
+                  className={cn(
+                    'size-2 rounded-full',
+                    coreProblem
+                      ? 'bg-destructive'
+                      : isSelected
+                        ? 'bg-primary'
+                        : 'bg-muted-foreground/60'
+                  )}
+                />
+                <CharacterMorph
+                  texts={[status]}
+                  reserveTexts={statusWidthTexts}
+                  interval={3000}
+                  className={cn(
+                    'h-5 leading-none [&>span:last-child]:justify-self-start',
+                    coreProblem
+                      ? 'text-destructive'
+                      : isSelected
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                  )}
+                />
               </div>
-            </button>
-            <div className="mt-3 h-8 flex items-center justify-center">
               <div
-                aria-hidden={!showConnectedTimer}
-                className={`inline-flex items-center gap-0.5 text-base font-bold text-foreground tabular-nums transition-all duration-300 ease-out ${
-                  showConnectedTimer ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
-                }`}
+                className={cn(
+                  'text-4xl font-bold tracking-tight tabular-nums',
+                  showConnectedTimer ? 'text-foreground' : 'text-muted-foreground/60'
+                )}
               >
                 <ConnectedTimer active={isSelected} />
               </div>
-            </div>
-            <div
-              aria-hidden={!showConnectedTimer}
-              className={`mt-2 flex items-center gap-4 tabular-nums transition-all duration-300 ease-out ${
-                showConnectedTimer ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
-              }`}
-            >
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <ArrowUp className="size-3.5 text-stroke-power-on" />
-                <span>{calcTraffic(trafficInfo.upTotal)}</span>
-              </div>
-              <div className="h-3 w-px bg-stroke" />
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <ArrowDown className="size-3.5 text-stroke-power-on" />
-                <span>{calcTraffic(trafficInfo.downTotal)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Group & Proxy selectors */}
-          {firstGroup && (
-            <div className="flag-emoji flex flex-col items-center mx-auto w-full max-w-3xs max-h-16">
-              <div
-                data-guide="home-group-selector"
-                className="w-full cursor-pointer"
-                onClick={() => navigate('/proxies', { state: { fromHome: true } })}
-              >
-                <div className="flex items-center justify-between h-9 rounded-2xl border border-stroke pl-3 pr-1 py-3 backdrop-blur-xl bg-card/50 transition-colors hover:bg-card/70">
-                  <div className="flag-emoji text-sm truncate max-w-52">
-                    {firstGroup.now || firstGroup.name}
-                  </div>
-                  <ChevronRight />
+              {viaLabel && (
+                <div className="flag-emoji truncate text-sm text-muted-foreground">
+                  {t('pages.home.via', { name: viaLabel })}
                 </div>
-              </div>
+              )}
             </div>
-          )}
-          {supportLinkInfo && (
-            <div className="flex justify-center text-sm text-muted-foreground">
-              <button
-                data-guide="home-support-link"
-                type="button"
-                onClick={() => open(supportLinkInfo.href)}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
+
+            <button
+              type="button"
+              disabled={isDisabled}
+              onClick={() => (coreProblem ? reopenCoreError() : onValueChange(!isSelected))}
+              data-guide="home-power-toggle"
+              className={cn(
+                'flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl text-[15px] font-semibold transition active:scale-[0.99] disabled:opacity-60 cursor-pointer',
+                coreProblem
+                  ? 'border border-destructive text-destructive hover:bg-destructive/10'
+                  : isSelected || loading
+                    ? 'border border-stroke text-foreground hover:bg-accent'
+                    : 'bg-primary text-primary-foreground hover:brightness-105'
+              )}
+            >
+              {loading ? (
+                <>
+                  <Spinner className="size-4" />
+                  {status}
+                </>
+              ) : coreProblem ? (
+                <>
+                  <TriangleAlert className="size-4" aria-hidden />
+                  {t('pages.home.coreProblem')}
+                </>
+              ) : (
+                <>
+                  <Power className="size-4" aria-hidden />
+                  {isSelected ? t('pages.home.disconnect') : t('pages.home.connect')}
+                </>
+              )}
+            </button>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-xs tabular-nums text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <ArrowUp className="size-3.5" aria-hidden />
+                  {calcTraffic(trafficInfo.upTotal)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <ArrowDown className="size-3.5" aria-hidden />
+                  {calcTraffic(trafficInfo.downTotal)}
+                </span>
+              </div>
+              <TrafficSparkline active={showConnectedTimer} />
+            </div>
+
+            {globalModeAllowed && outboundMode && (
+              <div
+                role="group"
+                aria-label={t('pages.home.routingMode')}
+                className="flex shrink-0 rounded-xl border border-stroke bg-background p-1"
               >
-                {supportLinkInfo.isTelegram ? (
-                  <SiTelegram className="size-4" />
-                ) : (
-                  <Globe className="size-4" />
-                )}
-                <span>{t('pages.profiles.support')}</span>
-              </button>
+                {modeOptions.map(({ value, icon: Icon, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={outboundMode === value}
+                    onClick={() => setOutboundMode(value)}
+                    className={cn(
+                      'flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors cursor-pointer',
+                      outboundMode === value
+                        ? 'bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <Icon className="size-3.5 shrink-0" aria-hidden />
+                    <span className="truncate">{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {supportLinkInfo && (
+              <div className="mt-auto flex justify-center text-sm text-muted-foreground">
+                <button
+                  data-guide="home-support-link"
+                  type="button"
+                  onClick={() => open(supportLinkInfo.href)}
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground cursor-pointer"
+                >
+                  {supportLinkInfo.isTelegram ? (
+                    <SiTelegram className="size-4" />
+                  ) : (
+                    <Globe className="size-4" />
+                  )}
+                  <span>{t('pages.profiles.support')}</span>
+                </button>
+              </div>
+            )}
+          </section>
+
+          {firstGroup && (
+            <div className="flex h-full min-h-80 min-w-0 flex-[1_1_340px] flex-col">
+              <ServerList group={firstGroup} />
             </div>
           )}
         </div>

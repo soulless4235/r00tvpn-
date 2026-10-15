@@ -180,7 +180,20 @@ export default {
       proxy: 'Прокси:',
       noProfile: 'Нет активного профиля',
       unlimited: 'Безлимит',
-      never: 'Никогда'
+      never: 'Никогда',
+      connect: 'Подключить',
+      disconnect: 'Отключить',
+      via: 'через {{name}}',
+      servers: 'Серверы',
+      allGroups: 'Все группы',
+      testLatency: 'Проверить задержку',
+      groupsSection: 'Группы',
+      nodes: 'Узлы',
+      otherNodes: 'Другие',
+      noResponse: 'нет ответа',
+      latencyMs: '{{ms}} мс',
+      fixedGroup: 'Узел выбирается автоматически',
+      routingMode: 'Режим маршрутизации'
     },
     settings: {
       title: 'Настройки приложения',

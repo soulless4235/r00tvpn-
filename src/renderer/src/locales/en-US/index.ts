@@ -177,7 +177,20 @@ export default {
       proxy: 'Proxy:',
       noProfile: 'No active profile',
       unlimited: 'Unlimited',
-      never: 'Never'
+      never: 'Never',
+      connect: 'Connect',
+      disconnect: 'Disconnect',
+      via: 'via {{name}}',
+      servers: 'Servers',
+      allGroups: 'All groups',
+      testLatency: 'Test latency',
+      groupsSection: 'Groups',
+      nodes: 'Nodes',
+      otherNodes: 'Other',
+      noResponse: 'no response',
+      latencyMs: '{{ms}} ms',
+      fixedGroup: 'The node is picked automatically',
+      routingMode: 'Routing mode'
     },
     settings: {
       title: 'Application Settings',

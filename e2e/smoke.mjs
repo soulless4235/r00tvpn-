@@ -154,7 +154,9 @@ const env = {
   ...process.env,
   HOME: home,
   XDG_CONFIG_HOME: path.join(home, '.config'),
-  XDG_CURRENT_DESKTOP: process.env.XDG_CURRENT_DESKTOP || 'GNOME'
+  XDG_CURRENT_DESKTOP: process.env.XDG_CURRENT_DESKTOP || 'GNOME',
+  // keep the developer's own clash:// and mihomo:// handlers untouched
+  R00TVPN_SKIP_PROTOCOL_REGISTRATION: '1'
 }
 const dataDir = path.join(env.XDG_CONFIG_HOME, 'r00tvpn')
 
@@ -373,10 +375,9 @@ try {
   })
 
   await check('select node in the UI', async () => {
+    // the home screen lists the main group's nodes next to the connect button
     await go('#/home')
-    await page.locator('[data-guide="home-group-selector"]').click()
-    await page.getByText('PROXY', { exact: true }).first().click()
-    await page.getByText('node-b', { exact: true }).first().click()
+    await page.getByRole('button', { name: /^node-b\b/ }).click()
     await waitFor(
       async () => (await inv('mihomoGroups')).find((g) => g.name === 'PROXY').now === 'node-b',
       'node-b selected'

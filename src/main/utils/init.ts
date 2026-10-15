@@ -203,6 +203,9 @@ async function migration(): Promise<void> {
 }
 
 function initDeeplink(): void {
+  // Test and dev runs on a machine with another Clash client installed would take over its
+  // clash:// and mihomo:// links (registry on Windows, mimeapps on Linux); opt out per launch
+  if (process.env.R00TVPN_SKIP_PROTOCOL_REGISTRATION === '1') return
   for (const scheme of DEEP_LINK_SCHEMES) {
     if (process.defaultApp) {
       if (process.argv.length >= 2) {

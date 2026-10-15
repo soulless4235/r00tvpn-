@@ -1,7 +1,7 @@
 export const defaultConfig: AppConfig = {
   core: 'mihomo',
   silentStart: false,
-  appTheme: 'system',
+  appTheme: 'dark',
   useWindowFrame: false,
   proxyInTray: true,
   useCustomTrayMenu: false,

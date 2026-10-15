@@ -1,9 +1,6 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import { useSidebar } from '@renderer/components/ui/sidebar'
-import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { useGroups } from '@renderer/hooks/use-groups'
-import { mihomoCloseAllConnections, patchMihomoConfig } from '@renderer/utils/ipc'
+import { useOutboundMode } from '@renderer/hooks/use-outbound-mode'
 import { cn } from '@renderer/lib/utils'
 import { ChevronsRight, Globe, Route } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -15,11 +12,7 @@ const OutboundModeSwitcher: React.FC = () => {
   const { t } = useTranslation()
   const { state, isMobile } = useSidebar()
   const collapsed = state === 'collapsed'
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { mutate: mutateGroups } = useGroups()
-  const { appConfig } = useAppConfig()
-  const { autoCloseConnection = true } = appConfig || {}
-  const { mode } = controledMihomoConfig || {}
+  const { mode, setMode: onChangeMode } = useOutboundMode()
 
   // Sync layout switch with sidebar animation:
   // - Collapsing: switch to icon-only immediately (shrink before sidebar narrows)
@@ -44,16 +37,6 @@ const OutboundModeSwitcher: React.FC = () => {
       return () => clearTimeout(timer)
     }
   }, [collapsed])
-
-  const onChangeMode = async (mode: OutboundMode): Promise<void> => {
-    await patchControledMihomoConfig({ mode })
-    await patchMihomoConfig({ mode })
-    if (autoCloseConnection) {
-      await mihomoCloseAllConnections()
-    }
-    mutateGroups()
-    window.electron.ipcRenderer.send('updateTrayMenu')
-  }
 
   if (!mode) return null
 

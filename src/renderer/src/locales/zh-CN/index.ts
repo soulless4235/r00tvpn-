@@ -251,7 +251,20 @@ export default {
       proxy: '代理:',
       noProfile: '没有活动配置',
       unlimited: '无限',
-      never: '永不'
+      never: '永不',
+      connect: '连接',
+      disconnect: '断开',
+      via: '经由 {{name}}',
+      servers: '服务器',
+      allGroups: '全部分组',
+      testLatency: '测试延迟',
+      groupsSection: '分组',
+      nodes: '节点',
+      otherNodes: '其他',
+      noResponse: '超时',
+      latencyMs: '{{ms}} ms',
+      fixedGroup: '节点自动选择',
+      routingMode: '出站模式'
     },
     settings: {
       title: '应用设置',
