@@ -263,6 +263,7 @@ export async function createProfile(
     case 'remote': {
       const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
       if (!item.url) throw new Error('Empty URL')
+      const userAgent = newItem.ua || (await getUserAgent())
       let res: AxiosResponse
       try {
         const httpsAgent = new https.Agent()
@@ -274,7 +275,7 @@ export async function createProfile(
               proxy: { protocol: 'http', host: '127.0.0.1', port: mixedPort }
             }),
           headers: {
-            'User-Agent': newItem.ua || (await getUserAgent()),
+            'User-Agent': userAgent,
             'x-hwid': getHWID(),
             'x-device-os': getDeviceOS(),
             'x-ver-os': getOSVersion(),
@@ -431,6 +432,9 @@ export async function createProfile(
           // ignore css download failure
         }
       }
+      if (shareLinks(data)) {
+        data = shareLinkProfile(item.url, userAgent, newItem.interval || 0)
+      }
       if (hwidLimitSupportUrl !== undefined) {
         // Over the limit the server's response still replaces the stored config, otherwise the
         // previously downloaded one keeps working. A body that is not a config is stored as empty.
@@ -452,6 +456,79 @@ export async function createProfile(
     }
   }
   return { item: newItem, hwidLimitSupportUrl }
+}
+
+// The schemes of the share links the core turns into proxies (mihomo's convert.ConvertsV2Ray)
+const SHARE_LINK_SCHEMES = new Set([
+  'vless',
+  'vmess',
+  'trojan',
+  'ss',
+  'ssr',
+  'hysteria',
+  'hysteria2',
+  'hy2',
+  'hysteria2+realm',
+  'hy2+realm',
+  'tuic',
+  'anytls',
+  'mierus',
+  'socks',
+  'socks5',
+  'socks5h',
+  'http',
+  'https'
+])
+
+// The group a share-link subscription's proxies are listed in
+const SHARE_LINK_GROUP = 'Серверы'
+
+// The links of a subscription made for V2Ray-style apps (Happ, v2RayTun): one share link a line,
+// often base64 as a whole. Anything else, a Clash config included, gives undefined. An http(s)
+// line counts only with a #name: a link to a proxy has one, a stray web address does not.
+function shareLinks(data: string): string[] | undefined {
+  const parse = (text: string): string[] | undefined => {
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+    if (!lines.length) return undefined
+    for (const line of lines) {
+      const scheme = /^([a-z][a-z0-9+.-]*):\/\//i.exec(line)?.[1].toLowerCase()
+      if (!scheme || !SHARE_LINK_SCHEMES.has(scheme)) return undefined
+      if ((scheme === 'http' || scheme === 'https') && !line.includes('#')) return undefined
+    }
+    return lines
+  }
+  const text = data.trim()
+  const plain = parse(text)
+  if (plain) return plain
+  const compact = text.replace(/\s+/g, '')
+  if (!/^[A-Za-z0-9+/_-]+=*$/.test(compact)) return undefined
+  return parse(Buffer.from(compact, 'base64').toString('utf-8'))
+}
+
+// A share-link subscription as a profile: the core downloads the links itself through a proxy
+// provider and reads them as it reads any V2Ray subscription, so they stay as current as the
+// subscription. interval is the profile's update interval in minutes, 0 for none.
+function shareLinkProfile(url: string, userAgent: string, interval: number): string {
+  return stringifyYaml({
+    'proxy-providers': {
+      subscription: {
+        type: 'http',
+        url,
+        interval: interval ? interval * 60 : 3600,
+        header: { 'User-Agent': [userAgent] },
+        'health-check': {
+          enable: true,
+          url: 'https://www.gstatic.com/generate_204',
+          interval: 300
+        }
+      }
+    },
+    'proxy-groups': [{ name: SHARE_LINK_GROUP, type: 'select', use: ['subscription'] }],
+    rules: [`MATCH,${SHARE_LINK_GROUP}`]
+  })
 }
 
 function verifyProfileStr(data: string): void {

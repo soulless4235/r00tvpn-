@@ -90,16 +90,21 @@ proxy-groups:
 rules:
   - MATCH,PROXY
 `
+// The same nodes as a subscription for V2Ray-style apps: base64 of one share link a line
+const linkSubscription = Buffer.from(
+  `http://127.0.0.1:${PORTS.nodeA}#node-a\nhttp://127.0.0.1:${PORTS.nodeB}#node-b\n`
+).toString('base64')
 const userAgents = []
 const sub = http
   .createServer((req, res) => {
     userAgents.push(req.headers['user-agent'] || '')
+    const links = req.url.startsWith('/links')
     res.writeHead(200, {
-      'content-type': 'text/yaml; charset=utf-8',
-      'profile-title': 'base64:' + Buffer.from('e2e').toString('base64'),
+      'content-type': links ? 'text/plain; charset=utf-8' : 'text/yaml; charset=utf-8',
+      'profile-title': 'base64:' + Buffer.from(links ? 'e2e-links' : 'e2e').toString('base64'),
       'subscription-userinfo': 'upload=0; download=0; total=10737418240; expire=0'
     })
-    res.end(req.method === 'HEAD' ? undefined : subscription)
+    res.end(req.method === 'HEAD' ? undefined : links ? linkSubscription : subscription)
   })
   .listen(PORTS.sub, '127.0.0.1')
 
@@ -449,6 +454,23 @@ try {
     }
     await check('TUN captures traffic without proxy settings', tunCheck)
   }
+
+  await check('share-link subscription', async () => {
+    // a base64 list of share links becomes a profile whose nodes the core reads itself
+    await inv('addProfileItem', { type: 'remote', url: `http://127.0.0.1:${PORTS.sub}/links` })
+    const cfg = await inv('getProfileConfig')
+    const item = cfg.items?.find((i) => i.url?.endsWith('/links'))
+    assert(item?.name === 'e2e-links', `profile name: ${item?.name}`)
+    assert(cfg.current === item.id, 'the new profile is not the current one')
+    let names = ''
+    await waitFor(async () => {
+      const group = (await inv('mihomoGroups'))?.find((g) => g.name === 'Серверы')
+      names = group?.all.map((p) => p.name).join(',') ?? ''
+      return names === 'node-a,node-b'
+    }, 'nodes from the share links').catch((e) => {
+      throw new Error(`${e.message}; group members: ${names || 'none'}`)
+    })
+  })
 
   await quit()
 } catch (e) {
