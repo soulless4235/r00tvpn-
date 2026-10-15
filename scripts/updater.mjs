@@ -1,5 +1,6 @@
 import yaml from 'yaml'
-import { readFileSync, writeFileSync } from 'fs'
+import { createHash } from 'crypto'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs'
 import { extractVersionSection } from './changelog.mjs'
 
 const pkg = readFileSync('package.json', 'utf-8')
@@ -17,6 +18,24 @@ const downloadUrl = `${repoUrl}/releases/download/${version}`
 const latest = {
   version,
   changelog
+}
+
+// The in-app updater checks a download against these. Taking them from here, not from the
+// GitHub API, keeps updates working past the API's 60 requests an hour per address, which
+// everyone behind one VPN server shares.
+if (existsSync('dist')) {
+  latest.sha256 = Object.fromEntries(
+    readdirSync('dist', { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .sort()
+      .map((file) => [
+        file,
+        createHash('sha256')
+          .update(readFileSync(`dist/${file}`))
+          .digest('hex')
+      ])
+  )
 }
 
 const badge = (format, label, logo) =>

@@ -42,6 +42,37 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   }
 }
 
+// The SHA-256 a release gives file: from its latest.yml, a plain download, or for a release
+// made before latest.yml carried them from the GitHub API. The API answers 403 past 60
+// requests an hour per address, and everyone behind one VPN server shares that address.
+async function expectedSha256(
+  releaseTag: string,
+  file: string,
+  config: AxiosRequestConfig
+): Promise<string> {
+  try {
+    const res = await axios.get(`${REPO_URL}/releases/download/${releaseTag}/latest.yml`, {
+      ...config,
+      responseType: 'text'
+    })
+    const hash = parseYaml<{ sha256?: Record<string, string> }>(res.data)?.sha256?.[file]
+    if (hash) return hash.toLowerCase()
+  } catch (e) {
+    if (axios.isCancel(e)) throw e
+  }
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${releaseTag}`
+  const releaseRes = await axios.get(apiUrl, {
+    ...config,
+    headers: { Accept: 'application/vnd.github.v3+json' }
+  })
+  const assets: Array<{ name: string; digest?: string }> = releaseRes.data.assets || []
+  const matchedAsset = assets.find((a) => a.name === file)
+  if (!matchedAsset || !matchedAsset.digest) {
+    throw new Error(`${t('error.sha256NotFound')}: "${file}"`)
+  }
+  return matchedAsset.digest.split(':')[1].toLowerCase()
+}
+
 export async function downloadAndInstallUpdate(version: string): Promise<void> {
   const { 'mixed-port': mixedPort = 0 } = (await getRuntimeConfig()) ?? {}
   const releaseTag = version
@@ -61,9 +92,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
   }
   downloadCancelToken = axios.CancelToken.source()
 
-  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${releaseTag}`
-  const apiRequestConfig: AxiosRequestConfig = {
-    headers: { Accept: 'application/vnd.github.v3+json' },
+  const requestConfig: AxiosRequestConfig = {
     ...(mixedPort != 0 && {
       proxy: {
         protocol: 'http',
@@ -81,13 +110,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
     })
     mainWindow?.setProgressBar(0)
 
-    const releaseRes = await axios.get(apiUrl, apiRequestConfig)
-    const assets: Array<{ name: string; digest?: string }> = releaseRes.data.assets || []
-    const matchedAsset = assets.find((a) => a.name === file)
-    if (!matchedAsset || !matchedAsset.digest) {
-      throw new Error(`${t('error.sha256NotFound')}: "${file}"`)
-    }
-    const expectedHash = matchedAsset.digest.split(':')[1].toLowerCase()
+    const expectedHash = await expectedSha256(releaseTag, file, requestConfig)
 
     if (!existsSync(path.join(dataDir(), file))) {
       const res = await axios.get(`${baseUrl}${file}`, {
