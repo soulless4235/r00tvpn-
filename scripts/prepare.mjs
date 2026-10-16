@@ -294,55 +294,51 @@ const resolveEnableLoopback = () =>
     file: 'enableLoopback.exe',
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
   })
-// The privileged service helper (GPL-3.0). Its "pre-release" tag is moved by
-// upstream, so each asset is pinned by hash: a silently replaced binary fails
-// the build instead of shipping. To update, take the new digests from
-// https://api.github.com/repos/UruhaLushia/sparkle-service/releases/tags/pre-release
-const SPARKLE_SERVICE_URL =
-  'https://github.com/UruhaLushia/sparkle-service/releases/download/pre-release'
-const SPARKLE_SERVICE_ASSETS = {
-  'win32-x64': [
-    'sparkle-service-windows-amd64-v1.exe',
-    'df7314bb79fdf4485a6adffe25b63eb7eebd5ddd3792ffcb2f6f31a616c9a9ac'
-  ],
-  'win32-ia32': [
-    'sparkle-service-windows-386.exe',
-    'e4b96942ef8698aafdb62ff56633b2ddb175b90b418e1108fb6b86db32c215b8'
-  ],
-  'win32-arm64': [
-    'sparkle-service-windows-arm64.exe',
-    '49b27aa8f7182965af22a8d2e0b8edcbec7e3a77d0889d6c35f5cd2cc8b9ecd0'
-  ],
-  'darwin-x64': [
-    'sparkle-service-darwin-amd64-v1',
-    'f9701f4d4a8048fd00661d8fca7637acd6ac0cc61a12dcab0a2652851486f449'
-  ],
-  'darwin-arm64': [
-    'sparkle-service-darwin-arm64',
-    '55263fa08ef9831d44a5e0b41dd2cb5b480e6b6bf9f678f87757b96f3144a5ee'
-  ],
-  'linux-x64': [
-    'sparkle-service-linux-amd64-v1',
-    'd87e8414f097a24b0b14f6d426ddb00a0646dd7f01bba9574659f6a0b529b691'
-  ],
-  'linux-arm64': [
-    'sparkle-service-linux-arm64',
-    'fc23208f8690d984ba8dfe9102665fd34ca5b372b855e4036072556cfdedc5c1'
-  ]
-}
-const resolveSparkleService = () => {
-  const asset = SPARKLE_SERVICE_ASSETS[`${platform}-${arch}`]
-  if (!asset) {
+// The privileged service helper (GPL-3.0), built from a reviewed commit of its source (needs
+// Go and git). Upstream rebuilds the binaries of its "pre-release" tag in place on every push,
+// so pinning those by hash failed our build whenever upstream moved; building the source keeps
+// new upstream code out until SPARKLE_SERVICE_COMMIT is moved on purpose. The build matches
+// upstream's own (.github/workflows/build.yml there): CGO off, amd64 at v1.
+const SPARKLE_SERVICE_REPO = 'https://github.com/UruhaLushia/sparkle-service.git'
+const SPARKLE_SERVICE_COMMIT = 'dbe85a6badd7026c757a7181a24096e8565ec5ce' // stop Windows core natively
+const resolveSparkleService = async () => {
+  const goos = { win32: 'windows', darwin: 'darwin', linux: 'linux' }[platform]
+  const goarch = { x64: 'amd64', ia32: '386', arm64: 'arm64' }[arch]
+  if (!goos || !goarch) {
     throw new Error(`unsupported platform "${platform}-${arch}"`)
   }
-  const [name, sha256] = asset
-
-  return resolveResource({
-    file: `sparkle-service${platform === 'win32' ? '.exe' : ''}`,
-    downloadURL: `${SPARKLE_SERVICE_URL}/${name}`,
-    sha256,
-    needExecutable: true
-  })
+  const src = path.join(cwd, 'extra', 'sparkle-service-src')
+  const target = path.join(
+    cwd,
+    'extra',
+    'files',
+    `sparkle-service${platform === 'win32' ? '.exe' : ''}`
+  )
+  fs.rmSync(src, { recursive: true, force: true })
+  fs.mkdirSync(path.dirname(target), { recursive: true })
+  try {
+    // fetching the commit by its hash pins every file of the source
+    execFileSync('git', ['init', '-q', src], { stdio: 'inherit' })
+    execFileSync(
+      'git',
+      ['-C', src, 'fetch', '-q', '--depth', '1', SPARKLE_SERVICE_REPO, SPARKLE_SERVICE_COMMIT],
+      { stdio: 'inherit' }
+    )
+    execFileSync('git', ['-C', src, 'checkout', '-q', 'FETCH_HEAD'], { stdio: 'inherit' })
+    execFileSync('go', ['build', '-trimpath', '-ldflags', '-s -w -buildid=', '-o', target, '.'], {
+      cwd: src,
+      env: { ...process.env, GOOS: goos, GOARCH: goarch, GOAMD64: 'v1', CGO_ENABLED: '0' },
+      stdio: 'inherit'
+    })
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      throw new Error('Go and git are required to build sparkle-service (https://go.dev/dl/)')
+    }
+    throw err
+  } finally {
+    fs.rmSync(src, { recursive: true, force: true })
+  }
+  console.log(`[INFO]: sparkle-service built for ${goos}/${goarch} from ${SPARKLE_SERVICE_COMMIT}`)
 }
 
 // Built from runner/ (needs Go); launched by the elevated scheduled task
