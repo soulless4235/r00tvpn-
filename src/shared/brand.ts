@@ -13,3 +13,6 @@ export const DEEP_LINK_SCHEMES = ['clash', 'mihomo', APP_SCHEME] as const
 
 export const GITHUB_REPO = 'soulless4235/r00tvpn-'
 export const REPO_URL = `https://github.com/${GITHUB_REPO}`
+
+// The service's Telegram bot: trial and subscriptions, offered while the app has no profile
+export const TELEGRAM_BOT_URL = 'https://t.me/r00tvpn_bot'

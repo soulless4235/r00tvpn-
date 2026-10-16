@@ -28,6 +28,7 @@ import TrafficSparkline from '@renderer/components/home/traffic-sparkline'
 import { useOutboundMode } from '@renderer/hooks/use-outbound-mode'
 import { cn } from '@renderer/lib/utils'
 import { SiTelegram } from 'react-icons/si'
+import { TELEGRAM_BOT_URL } from '../../../shared/brand'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
@@ -305,6 +306,22 @@ const Home: React.FC = () => {
               <PlusCircle className="size-5" />
               <span className="text-sm font-medium">{t('pages.profiles.addProfile')}</span>
             </button>
+            {/* r00tvpn: someone who installed the app without a subscription gets the trial offer */}
+            <div className="flex w-full flex-col items-center gap-2 border-t border-stroke pt-4">
+              <p className="text-sm font-semibold text-foreground">
+                {t('pages.profiles.noSubscriptionTitle')}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground text-center">
+                {t('pages.profiles.noSubscriptionText')}
+              </p>
+              <button
+                onClick={() => open(TELEGRAM_BOT_URL)}
+                className="flex items-center gap-2 rounded-xl border border-stroke px-4 py-2 text-foreground transition hover:bg-accent cursor-pointer"
+              >
+                <SiTelegram className="size-4" />
+                <span className="text-sm font-medium">{t('pages.profiles.getInTelegram')}</span>
+              </button>
+            </div>
           </div>
           {showEditModal && editingItem && (
             <EditInfoModal
